@@ -7,6 +7,8 @@ require 'graphviz'
 
 module AasmStatechart
   class Renderer
+    FORMATS = GraphViz::Constants::FORMATS
+
     GRAPH_STYLE = {
       rankdir: :TB,
     }
@@ -67,8 +69,8 @@ module AasmStatechart
       klass.aasm.events.each { |name, event| render_event(name, event) }
     end
 
-    def save_png(filename)
-      @graph.output(png: filename)
+    def save(filename, format: 'png')
+      @graph.output({format => filename})
     end
 
     private

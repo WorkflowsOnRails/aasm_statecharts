@@ -18,13 +18,29 @@ def parse_command_line!
   options = {
     all: false,
     directory: './doc',
+    format: 'png',
   }
+
+  formats = AasmStatechart::Renderer::FORMATS.join(', ')
 
   parser = OptionParser.new do |opts|
     opts.banner = "Usage: aasm_statechart [options] <model> [models ...]"
 
     opts.on('-a', '--all', "Render all models using AASM") do
       options[:all] = true
+    end
+
+    opts.on('-t', '--file-type type',
+            "Output in the specified format, which must be one of the following: #{formats}.") do |format|
+      format = format.downcase
+
+      if !AasmStatechart::Renderer::FORMATS.include?(format)
+        puts "error: #{format} is not a recognized file format."
+        puts "The file format must be one of the following: #{formats}."
+        exit(1)
+      end
+
+      options[:format] = format
     end
 
     opts.on('-d', '--directory directory',
@@ -79,7 +95,7 @@ models = options[:all] ? collect_all_models : collect_models(model_names)
 models.each do |klass|
   name = klass.name.underscore
   renderer = AasmStatechart::Renderer.new(klass)
-  filename = "#{options[:directory]}/#{name}.png"
-  renderer.save_png(filename)
+  filename = "#{options[:directory]}/#{name}.#{options[:format]}"
+  renderer.save(filename, format: options[:format])
   puts " * rendered #{name} to #{filename}"
 end
