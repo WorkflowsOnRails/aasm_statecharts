@@ -30,8 +30,13 @@ def parse_command_line!
       options[:all] = true
     end
 
+    opts.on('-d', '--directory directory',
+            "Output to a specific directory (default: #{options[:directory]})") do |directory|
+      options[:directory] = directory
+    end
+
     opts.on('-t', '--file-type type',
-            "Output in the specified format, which must be one of the following: #{formats}.") do |format|
+            "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
       format = format.downcase
 
       if !AasmStatechart::Renderer::FORMATS.include?(format)
@@ -41,11 +46,6 @@ def parse_command_line!
       end
 
       options[:format] = format
-    end
-
-    opts.on('-d', '--directory directory',
-            "Output to a specific directory (default: #{options[:directory]})") do |directory|
-      options[:directory] = directory
     end
 
     opts
