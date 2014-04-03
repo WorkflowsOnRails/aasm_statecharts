@@ -1,4 +1,17 @@
+# Library module than handles translating AASM state machines to statechart
+# diagrams.
 #
+# Usage is simple. First, create an instance of AasmStatechart::Renderer, passing
+# in the class that has the AASM state machine that you would like to generate
+# the diagram of. Then call #save with the filename to save the diagram to, as well
+# as the format to save in. This must be one of the formats specified in
+# GraphViz::Constants::FORMATS.
+#
+# For example, to render the state machine associated with a class named ModelClass,
+# you would do the following:
+#   
+#   renderer = AasmStatechart::Renderer.new(ModelClass)
+#   renderer.save(filename, format: 'png')
 #
 # @author Brendan MacDonell
 
