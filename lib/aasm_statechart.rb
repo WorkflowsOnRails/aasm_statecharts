@@ -78,6 +78,10 @@ module AasmStatechart
       NODE_STYLE.each { |k, v| @graph.node[k] = v }
       EDGE_STYLE.each { |k, v| @graph.edge[k] = v }
 
+      if klass.aasm.states.empty?
+        raise RuntimeError, 'No states found for #{klass.name}!'
+      end
+
       klass.aasm.states.each { |state| render_state(state) }
       klass.aasm.events.each { |name, event| render_event(name, event) }
     end
@@ -86,7 +90,9 @@ module AasmStatechart
       @graph.output({format => filename})
     end
 
-    private
+    def graph
+      @graph
+    end
 
     def start_node
       if @start_node.nil?
@@ -103,6 +109,8 @@ module AasmStatechart
 
       @end_node
     end
+
+    private
 
     def get_options(options, keys)
       options
