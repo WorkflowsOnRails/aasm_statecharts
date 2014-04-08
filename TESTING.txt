@@ -1,0 +1,2 @@
+To run the tests, execute "bundle" to install dependencies, and then
+run "bundle exec rspec".
