@@ -4,8 +4,13 @@
 #
 # @author Brendan MacDonell
 
-require 'fileutils'
 require 'spec_helper'
+
+require 'aasm'
+require 'active_record'
+
+require 'tmpdir'
+require 'fileutils'
 
 class NoAasm
 end
