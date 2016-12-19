@@ -1,6 +1,11 @@
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'aasm-statechart/version'
+
 Gem::Specification.new do |s|
   s.name        = 'aasm_statecharts'
-  s.version     = '1.0.2'
+  s.version     = AASM_StateChart::VERSION
   s.date        = '2016-12-18'
   s.summary     = "AASM statecharts"
   s.description = "Generate UML-style state charts from AASM state machines"
