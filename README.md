@@ -3,6 +3,15 @@ aasm_statecharts
 
 `aasm_statecharts` is a utility for generating UML statechart diagrams from state machines defined using [AASM](https://github.com/aasm/aasm). Unlike other state diagram generators, it can express extended finite state machine concepts such as guards and entry actions.
 
+**Note:**  This fork is updated to work with **rails 5** and **aasm 4**.  This will **not** work with aasm < 4.0
+
+Requirements
+------------
+- rails >= 5.0
+- aasm >= 4.0
+- ruby-graphviz >= 1.0
+
+
 Installation and Invokation
 ---------------------------
 
