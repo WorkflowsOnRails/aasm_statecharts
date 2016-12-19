@@ -1,10 +1,9 @@
-require 'tmpdir'
-
-Bundler.require(:default, :development)
+require 'simplecov'
 
 SimpleCov.start do
   add_filter "/spec/"
 end
+
 
 require_relative '../lib/aasm_statechart'
 
