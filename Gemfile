@@ -4,7 +4,7 @@ gem 'activesupport'
 gem 'activerecord', require: 'active_record'
 
 gem 'ruby-graphviz'
-gem 'aasm'
+gem 'aasm', '>= 4.0'
 
 group :development do
   gem 'rspec'

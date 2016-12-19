@@ -88,7 +88,7 @@ module AasmStatechart
       end
 
       klass.aasm.states.each { |state| render_state(state) }
-      klass.aasm.events.each { |name, event| render_event(name, event) }
+      klass.aasm.events.each { |event| render_event(event) unless event.blank? }
     end
 
     def save(filename, format: 'png')
@@ -148,9 +148,9 @@ module AasmStatechart
       end
     end
 
-    def render_event(name, event)
+    def render_event(event)
       event.transitions.each do |transition|
-        chunks = [name]
+        chunks = [event.name]
 
         guard = transition.options.fetch(:guard, nil)
         chunks << "[#{guard}]" if guard

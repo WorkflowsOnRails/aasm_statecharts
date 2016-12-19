@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.license     = 'MIT'
 
   s.add_dependency 'rails', '~> 5.0'
-  s.add_dependency 'aasm', '~> 3.0'
+  s.add_dependency 'aasm', '~> 4.0', '>= 4.0'
   s.add_dependency 'ruby-graphviz', '~> 1.0'
 
   s.add_development_dependency 'rspec'
