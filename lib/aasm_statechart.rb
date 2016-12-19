@@ -1,3 +1,6 @@
+require 'graphviz'
+
+
 # Library module than handles translating AASM state machines to statechart
 # diagrams.
 #
@@ -15,11 +18,13 @@
 #
 # @author Brendan MacDonell
 
-require 'graphviz'
 
 
 module AasmStatechart
+
   class Renderer
+
+
     FORMATS = GraphViz::Constants::FORMATS
 
     GRAPH_STYLE = {
@@ -79,7 +84,7 @@ module AasmStatechart
       EDGE_STYLE.each { |k, v| @graph.edge[k] = v }
 
       if klass.aasm.states.empty?
-        raise RuntimeError, 'No states found for #{klass.name}!'
+        raise RuntimeError, "No states found for #{klass.name}!"
       end
 
       klass.aasm.states.each { |state| render_state(state) }
