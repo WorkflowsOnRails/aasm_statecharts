@@ -54,19 +54,19 @@ class ManyStates < ActiveRecord::Base
 end
 
 
-describe AasmStatechart do
+describe AASM_StateChart do
   include SpecHelper
 
   it 'fails when given a class that does not have aasm included' do
-    expect { AasmStatechart::Renderer.new(NoAasm) }.to raise_error
+    expect { AASM_StateChart::Renderer.new(NoAasm) }.to raise_error
   end
 
   it 'fails when given a class that has no states defined' do
-    expect { AasmStatechart::Renderer.new(EmptyAasm) }.to raise_error
+    expect { AASM_StateChart::Renderer.new(EmptyAasm) }.to raise_error
   end
 
   it 'fails if an invalid file format is given' do
-    renderer = AasmStatechart::Renderer.new(SingleState)
+    renderer = AASM_StateChart::Renderer.new(SingleState)
 
     Dir.mktmpdir do |dir|
       filename = "#{dir}/single.png"
@@ -75,7 +75,7 @@ describe AasmStatechart do
   end
 
   it 'renders statecharts with single states' do
-    renderer = AasmStatechart::Renderer.new(SingleState)
+    renderer = AASM_StateChart::Renderer.new(SingleState)
     edges = renderer.graph.each_edge
     nodes = renderer.graph.each_node
 
@@ -97,7 +97,7 @@ describe AasmStatechart do
   end
 
   it 'renders statecharts of arbitrary complexity' do
-    renderer = AasmStatechart::Renderer.new(ManyStates)
+    renderer = AASM_StateChart::Renderer.new(ManyStates)
 
     edges = renderer.graph.each_edge
     nodes = renderer.graph.each_node
