@@ -1,3 +1,6 @@
+require 'graphviz'
+
+
 # Library module than handles translating AASM state machines to statechart
 # diagrams.
 #
@@ -15,11 +18,13 @@
 #
 # @author Brendan MacDonell
 
-require 'graphviz'
 
 
 module AasmStatechart
+
   class Renderer
+
+
     FORMATS = GraphViz::Constants::FORMATS
 
     GRAPH_STYLE = {
@@ -79,11 +84,11 @@ module AasmStatechart
       EDGE_STYLE.each { |k, v| @graph.edge[k] = v }
 
       if klass.aasm.states.empty?
-        raise RuntimeError, 'No states found for #{klass.name}!'
+        raise RuntimeError, "No states found for #{klass.name}!"
       end
 
       klass.aasm.states.each { |state| render_state(state) }
-      klass.aasm.events.each { |name, event| render_event(name, event) }
+      klass.aasm.events.each { |event| render_event(event) unless event.blank? }
     end
 
     def save(filename, format: 'png')
@@ -143,9 +148,9 @@ module AasmStatechart
       end
     end
 
-    def render_event(name, event)
+    def render_event(event)
       event.transitions.each do |transition|
-        chunks = [name]
+        chunks = [event.name]
 
         guard = transition.options.fetch(:guard, nil)
         chunks << "[#{guard}]" if guard
