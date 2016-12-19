@@ -16,11 +16,11 @@ require 'graphviz'
 #   renderer = AasmStatechart::Renderer.new(ModelClass)
 #   renderer.save(filename, format: 'png')
 #
-# @author Brendan MacDonell
+# @author Brendan MacDonell and Ashley Engelund
 
 
 
-module AasmStatechart
+module AASM_StateChart
 
   class Renderer
 
