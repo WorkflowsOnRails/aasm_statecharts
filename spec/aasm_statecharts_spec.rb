@@ -44,12 +44,17 @@ class ManyStates < ActiveRecord::Base
     end
 
     event :y do
-      transitions from: :a, to: :b, on_transition: :y_action
+      transitions from: :a, to: :b, after: :y_action
     end
 
     event :z do
-      transitions from: :b, to: :a, on_transition: [:z1, :z2]
+      transitions from: :b, to: :a, after: [:z1, :z2]
     end
+
+    event :many_from do
+      transitions from: [:a, :b], to: :z
+    end
+
   end
 end
 
@@ -79,8 +84,8 @@ describe AASM_StateChart do
     edges = renderer.graph.each_edge
     nodes = renderer.graph.each_node
 
-    expect(edges.length).to equal 1
-    expect(nodes.length).to equal 2
+    expect(edges.length).to eq 1
+    expect(nodes.length).to eq 2
 
     expect(name_of(edges[0].node_one)).to eq name_of(renderer.start_node.id)
     expect(edges[0].node_two).to eq "single"
@@ -102,8 +107,8 @@ describe AASM_StateChart do
     edges = renderer.graph.each_edge
     nodes = renderer.graph.each_node
 
-    expect(edges.length).to equal 6
-    expect(nodes.length).to equal 5
+    expect(edges.length).to eq 6
+    expect(nodes.length).to eq 5
 
     find_edge(edges, renderer.start_node.id, 'a')
     find_edge(edges, 'c', renderer.end_node.id)
