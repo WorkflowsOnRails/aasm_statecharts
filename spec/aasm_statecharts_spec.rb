@@ -63,11 +63,11 @@ describe AASM_StateChart do
   include SpecHelper
 
   it 'warns when given a class that does not have aasm included' do
-    expect{AASM_StateChart::Renderer.new(NoAasm)}.to raise_error(AASM_StateChart::NoAASM)
+    expect{AASM_StateChart::Renderer.new(NoAasm)}.to raise_error(AASM_StateChart::NoAasmError)
   end
 
   it 'warns when given a class that has no states defined' do
-    expect{AASM_StateChart::Renderer.new(EmptyAasm)}.to raise_error(AASM_StateChart::NoStates)
+    expect{AASM_StateChart::Renderer.new(EmptyAasm)}.to raise_error(AASM_StateChart::NoStatesError)
   end
 
   it 'fails if an invalid file format is given' do
@@ -123,12 +123,12 @@ describe AASM_StateChart do
 
         it 'a to b' do
           a_b = find_edge(edges, 'a', 'b')
-          expect(a_b['label'].source.strip).to match 'y  /y_action();'
+          expect(a_b['label'].source.strip).to eq 'y / y_action();'
         end
 
         it 'b to a' do
           b_a = find_edge(edges, 'b', 'a')
-          expect(b_a['label'].source.strip).to match 'z  /z1(); z2();'
+          expect(b_a['label'].source.strip).to eq 'z / z1(); z2();'
         end
 
         it 'b to c' do
