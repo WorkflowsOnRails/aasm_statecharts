@@ -16,11 +16,11 @@ Gem::Specification.new do |s|
   s.homepage    = 'http://rubygems.org/gems/aasm_statecharts'
   s.license     = 'MIT'
 
-  s.add_dependency 'rails', '~> 5.0'
+  s.add_dependency 'rails', '~> 5.0', '>= 5.0'
   s.add_dependency 'aasm', '~> 4.0', '>= 4.0'
   s.add_dependency 'ruby-graphviz', '~> 1.0'
 
-  s.add_development_dependency 'rspec'
-  s.add_development_dependency 'simplecov'
+  s.add_development_dependency 'rspec', '~> 3.0', '>= 3.0'
+  s.add_development_dependency 'simplecov', '~> 0.10', '>= 0.10'
 
 end

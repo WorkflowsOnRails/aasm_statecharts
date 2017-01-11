@@ -21,6 +21,7 @@ require 'graphviz'
 # @see http://www.graphviz.org/Documentation.php for style and attribute documentation
 #------------------------------------------------------------
 
+
 module AASM_StateChart
 
   class AASM_StateChart_Error < StandardError
@@ -32,8 +33,8 @@ module AASM_StateChart
   class NoStates_Error < AASM_StateChart_Error
   end
 
-  class Renderer
 
+  class Renderer
 
     FORMATS = GraphViz::Constants::FORMATS
 
@@ -137,6 +138,7 @@ module AASM_StateChart
     end
 
 
+    #------
     private
 
     def get_options(options, keys)
@@ -167,8 +169,10 @@ module AASM_StateChart
 
       if state.options.fetch(:initial, false)
         @graph.add_edges(start_node, node)
+
       elsif state.options.fetch(:final, false)
         @graph.add_edges(node, end_node)
+
       end
     end
 
@@ -178,14 +182,25 @@ module AASM_StateChart
         chunks = [event.name]
 
         guard = transition.options.fetch(:guard, nil)
-        chunks << "[#{guard}]" if guard
-        callbacks = get_callbacks(transition.options, TRANSITION_CALLBACKS)
-        chunks << '/' << callbacks if callbacks.present?
 
-        label = " #{chunks.join(' ')}  "
+        chunks << render_guard(transition.options.fetch(:guard, nil))
+
+        chunks << render_callbacks(get_callbacks(transition.options, TRANSITION_CALLBACKS))
+
+        label = " #{chunks.join(' ')} "
 
         @graph.add_edges(transition.from.to_s, transition.to.to_s, label: label)
       end
+    end
+
+
+    def render_guard(guard)
+      guard.present? ? "[#{guard}]" : ''
+    end
+
+
+    def render_callbacks(callbacks)
+      callbacks.present? ? '/ ' << callbacks : ''
     end
   end
 end

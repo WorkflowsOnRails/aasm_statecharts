@@ -123,12 +123,12 @@ describe AASM_StateChart do
 
         it 'a to b' do
           a_b = find_edge(edges, 'a', 'b')
-          expect(a_b['label'].source.strip).to eq 'y / y_action();'
+          expect(a_b['label'].source.strip).to eq 'y  / y_action();'
         end
 
         it 'b to a' do
           b_a = find_edge(edges, 'b', 'a')
-          expect(b_a['label'].source.strip).to eq 'z / z1(); z2();'
+          expect(b_a['label'].source.strip).to eq 'z  / z1(); z2();'
         end
 
         it 'b to c' do

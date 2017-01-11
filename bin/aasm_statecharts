@@ -6,9 +6,9 @@ require_relative '../lib/aasm_statechart'
 
 def parse_command_line!
   options = {
-      all: false,
-      directory: './doc',
-      format: 'png',
+    all: false,
+    directory: './doc',
+    format: 'png',
   }
 
   formats = AASM_StateChart::Renderer::FORMATS.join(', ')
@@ -21,7 +21,7 @@ def parse_command_line!
       exit(0)
     end
 
-    opts.on('-a', '--all', "Render all models using AASM") do
+    opts.on('-a', '--all', 'Render all models using AASM') do
       options[:all] = true
     end
 
@@ -34,7 +34,7 @@ def parse_command_line!
             "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
       format = format.downcase
 
-      if !AASM_StateChart::Renderer::FORMATS.include?(format)
+      unless AASM_StateChart::Renderer::FORMATS.include?(format)
         puts "error: #{format} is not a recognized file format."
         puts "The file format must be one of the following: #{formats}."
         exit(1)
@@ -58,7 +58,7 @@ end
 
 
 def load_rails!
-  if !File.exists? './config/environment.rb'
+  unless File.exists? './config/environment.rb'
     script_name = File.basename $PROGRAM_NAME
     puts 'error: unable to find ./config/environment.rb.'
     puts "Please run #{script_name} from the root of your Rails application."
@@ -69,7 +69,7 @@ def load_rails!
 end
 
 
-def ensure_directory! directory
+def ensure_directory!(directory)
   Dir.mkdir(directory) unless Dir.exists? directory
 end
 
