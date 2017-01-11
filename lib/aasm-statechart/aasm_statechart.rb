@@ -17,10 +17,20 @@ require 'graphviz'
 #   renderer.save(filename, format: 'png')
 #
 # @author Brendan MacDonell and Ashley Engelund
-
-
+#
+# @see http://www.graphviz.org/Documentation.php for style and attribute documentation
+#------------------------------------------------------------
 
 module AASM_StateChart
+
+  class AASM_StateChart_Error < StandardError
+  end
+
+  class NoAASM_Error < AASM_StateChart_Error
+  end
+
+  class NoStates_Error < AASM_StateChart_Error
+  end
 
   class Renderer
 
@@ -28,21 +38,21 @@ module AASM_StateChart
     FORMATS = GraphViz::Constants::FORMATS
 
     GRAPH_STYLE = {
-      rankdir: :TB,
+        rankdir: :TB,
     }
 
     NODE_STYLE = {
-      shape: :Mrecord,
-      fontname: 'Arial',
-      fontsize: 10,
-      penwidth: 0.7,
+        shape: :Mrecord,
+        fontname: 'Arial',
+        fontsize: 10,
+        penwidth: 0.7,
     }
 
     EDGE_STYLE = {
-      dir: :forward,
-      fontname: 'Arial',
-      fontsize: 9,
-      penwidth: 0.7,
+        dir: :forward,
+        fontname: 'Arial',
+        fontsize: 9,
+        penwidth: 0.7,
     }
 
     START_NODE_STYLE = {
@@ -71,6 +81,7 @@ module AASM_StateChart
     EXIT_CALLBACKS = [:before_exit, :exit, :after_exit]
     TRANSITION_CALLBACKS = [:before, :on_transition, :after]
 
+
     def initialize(klass)
       @start_node = nil
       @end_node = nil
@@ -83,21 +94,30 @@ module AASM_StateChart
       NODE_STYLE.each { |k, v| @graph.node[k] = v }
       EDGE_STYLE.each { |k, v| @graph.edge[k] = v }
 
-      if klass.aasm.states.empty?
-        raise RuntimeError, "No states found for #{klass.name}!"
+
+      if !(klass.respond_to? :aasm)
+        raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
+      else
+        if klass.aasm.states.empty?
+          raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
+        else
+          klass.aasm.states.each { |state| render_state(state) }
+          klass.aasm.events.each { |event| render_event(event) unless event.blank? }
+        end
       end
 
-      klass.aasm.states.each { |state| render_state(state) }
-      klass.aasm.events.each { |event| render_event(event) unless event.blank? }
     end
+
 
     def save(filename, format: 'png')
       @graph.output({format => filename})
     end
 
+
     def graph
       @graph
     end
+
 
     def start_node
       if @start_node.nil?
@@ -107,6 +127,7 @@ module AASM_StateChart
       @start_node
     end
 
+
     def end_node
       if @end_node.nil?
         @end_node = @graph.add_nodes(SecureRandom.uuid, **END_NODE_STYLE)
@@ -115,20 +136,23 @@ module AASM_StateChart
       @end_node
     end
 
+
     private
 
     def get_options(options, keys)
       options
-        .select { |key| keys.include? key }
-        .values
-        .flatten
+          .select { |key| keys.include? key }
+          .values
+          .flatten
     end
+
 
     def get_callbacks(options, keys)
       get_options(options, keys)
-        .map { |callback| "#{callback}();" }
-        .join(' ')
+          .map { |callback| "#{callback}();" }
+          .join(' ')
     end
+
 
     def render_state(state)
       enter_callbacks = get_callbacks(state.options, ENTER_CALLBACKS)
@@ -147,6 +171,7 @@ module AASM_StateChart
         @graph.add_edges(node, end_node)
       end
     end
+
 
     def render_event(event)
       event.transitions.each do |transition|

@@ -24,9 +24,9 @@ class SingleState < ActiveRecord::Base
 
   aasm do
     state :single,
-      initial: true,
-      enter: [:foo, :bar],
-      exit: [:baz, :quux]
+          initial: true,
+          enter: [:foo, :bar],
+          exit: [:baz, :quux]
   end
 end
 
@@ -44,12 +44,17 @@ class ManyStates < ActiveRecord::Base
     end
 
     event :y do
-      transitions from: :a, to: :b, on_transition: :y_action
+      transitions from: :a, to: :b, after: :y_action
     end
 
     event :z do
-      transitions from: :b, to: :a, on_transition: [:z1, :z2]
+      transitions from: :b, to: :a, after: [:z1, :z2]
     end
+
+    event :many_from do
+      transitions from: [:a, :b], to: :z
+    end
+
   end
 end
 
@@ -57,12 +62,12 @@ end
 describe AASM_StateChart do
   include SpecHelper
 
-  it 'fails when given a class that does not have aasm included' do
-    expect { AASM_StateChart::Renderer.new(NoAasm) }.to raise_error
+  it 'warns when given a class that does not have aasm included' do
+    expect{AASM_StateChart::Renderer.new(NoAasm)}.to raise_error(AASM_StateChart::NoAASM_Error)
   end
 
-  it 'fails when given a class that has no states defined' do
-    expect { AASM_StateChart::Renderer.new(EmptyAasm) }.to raise_error
+  it 'warns when given a class that has no states defined' do
+    expect{AASM_StateChart::Renderer.new(EmptyAasm)}.to raise_error(AASM_StateChart::NoStates_Error)
   end
 
   it 'fails if an invalid file format is given' do
@@ -70,7 +75,7 @@ describe AASM_StateChart do
 
     Dir.mktmpdir do |dir|
       filename = "#{dir}/single.png"
-      expect { renderer.save(filename, format: 'foobar') }.to raise_error
+      expect { renderer.save(filename, format: 'foobar') }.to raise_error StandardError
     end
   end
 
@@ -79,8 +84,8 @@ describe AASM_StateChart do
     edges = renderer.graph.each_edge
     nodes = renderer.graph.each_node
 
-    expect(edges.length).to equal 1
-    expect(nodes.length).to equal 2
+    expect(edges.length).to eq 1
+    expect(nodes.length).to eq 2
 
     expect(name_of(edges[0].node_one)).to eq name_of(renderer.start_node.id)
     expect(edges[0].node_two).to eq "single"
@@ -96,37 +101,72 @@ describe AASM_StateChart do
     end
   end
 
-  it 'renders statecharts of arbitrary complexity' do
-    renderer = AASM_StateChart::Renderer.new(ManyStates)
+  describe 'renders statecharts of arbitrary complexity' do
+    let(:renderer) { AASM_StateChart::Renderer.new(ManyStates) }
 
-    edges = renderer.graph.each_edge
-    nodes = renderer.graph.each_node
+    describe 'edges' do
 
-    expect(edges.length).to equal 6
-    expect(nodes.length).to equal 5
+      let(:edges) { renderer.graph.each_edge }
 
-    find_edge(edges, renderer.start_node.id, 'a')
-    find_edge(edges, 'c', renderer.end_node.id)
+      it 'length' do
+        expect(edges.length).to eq 8
+      end
 
-    a_a = find_edge(edges, 'a', 'a')
-    expect_label_matches(a_a, /x \[x_guard\]/)
+      describe 'finds edges' do
 
-    a_b = find_edge(edges, 'a', 'b')
-    expect_label_matches(a_b, /y \/ y_action\(\);/)
+        it 'a to a' do
+          find_edge(edges, renderer.start_node.id, 'a')
 
-    b_a = find_edge(edges, 'b', 'a')
-    expect_label_matches(b_a, /z \/ z1\(\); z2\(\);/)
+          a_a = find_edge(edges, 'a', 'a')
+          expect_label_matches(a_a, /x \[x_guard\]/)
+        end
 
-    b_c = find_edge(edges, 'b', 'c')
-    expect_label_matches(b_c, /x/)
+        it 'a to b' do
+          a_b = find_edge(edges, 'a', 'b')
+          expect(a_b['label'].source.strip).to eq 'y / y_action();'
+        end
 
-    expect_label_matches(nodes['a'], /exit \/ a_exit/)
-    expect_label_matches(nodes['b'], /entry \/ b_enter/)
+        it 'b to a' do
+          b_a = find_edge(edges, 'b', 'a')
+          expect(b_a['label'].source.strip).to eq 'z / z1(); z2();'
+        end
 
-    Dir.mktmpdir do |dir|
-      filename = "#{dir}/many.png"
-      renderer.save(filename, format: 'png')
-      expect(File.exists?(filename)).to be true
+        it 'b to c' do
+          find_edge(edges, 'c', renderer.end_node.id)
+          b_c = find_edge(edges, 'b', 'c')
+          expect_label_matches(b_c, /x/)
+        end
+      end
+
     end
+
+    describe 'nodes' do
+      let(:nodes) { renderer.graph.each_node }
+
+      it 'length' do
+        expect(nodes.length).to eq 6
+      end
+
+      it 'node a label' do
+        expect_label_matches(nodes['a'], /exit \/ a_exit/)
+      end
+
+      it 'node b label' do
+        expect_label_matches(nodes['b'], /entry \/ b_enter/)
+      end
+
+    end
+
+
+    it 'can save to .png' do
+
+      Dir.mktmpdir do |dir|
+        filename = "#{dir}/many.png"
+        renderer.save(filename, format: 'png')
+        expect(File.exists?(filename)).to be true
+      end
+
+    end
+
   end
 end
