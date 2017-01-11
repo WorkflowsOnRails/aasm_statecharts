@@ -1,30 +1,25 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-begin
-  require 'bundler'
-  Bundler.setup
-rescue Exception
-end
-
-here = File.expand_path(File.dirname __FILE__)
-$:<< "#{here}/../lib"
-
 require 'optparse'
-require 'aasm_statechart'
+require_relative '../lib/aasm_statechart'
 
 
 def parse_command_line!
   options = {
-    all: false,
-    directory: './doc',
-    format: 'png',
+      all: false,
+      directory: './doc',
+      format: 'png',
   }
 
-  formats = AasmStatechart::Renderer::FORMATS.join(', ')
+  formats = AASM_StateChart::Renderer::FORMATS.join(', ')
 
   parser = OptionParser.new do |opts|
     opts.banner = "Usage: aasm_statechart [options] <model> [models ...]"
+
+    opts.on('--version', 'version of this gem') do
+      puts AASM_StateChart::VERSION
+      exit(0)
+    end
 
     opts.on('-a', '--all', "Render all models using AASM") do
       options[:all] = true
@@ -39,7 +34,7 @@ def parse_command_line!
             "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
       format = format.downcase
 
-      if !AasmStatechart::Renderer::FORMATS.include?(format)
+      if !AASM_StateChart::Renderer::FORMATS.include?(format)
         puts "error: #{format} is not a recognized file format."
         puts "The file format must be one of the following: #{formats}."
         exit(1)
@@ -61,6 +56,7 @@ def parse_command_line!
   [options, ARGV]
 end
 
+
 def load_rails!
   if !File.exists? './config/environment.rb'
     script_name = File.basename $PROGRAM_NAME
@@ -72,17 +68,20 @@ def load_rails!
   require './config/environment'
 end
 
+
 def ensure_directory! directory
   Dir.mkdir(directory) unless Dir.exists? directory
 end
+
 
 def collect_models(model_names)
   model_names.map { |model_name| model_name.classify.constantize }
 end
 
+
 def collect_all_models
   Rails::Application.subclasses.first.eager_load!
-  ActiveRecord::Base.subclasses.select { |klass| klass.respond_to? :aasm }
+  ActiveRecord::Base.descendants.select { |klass| klass.respond_to? :aasm }
 end
 
 
@@ -94,7 +93,7 @@ models = options[:all] ? collect_all_models : collect_models(model_names)
 
 models.each do |klass|
   name = klass.name.underscore
-  renderer = AasmStatechart::Renderer.new(klass)
+  renderer = AASM_StateChart::Renderer.new(klass)
   filename = "#{options[:directory]}/#{name}.#{options[:format]}"
   renderer.save(filename, format: options[:format])
   puts " * rendered #{name} to #{filename}"
