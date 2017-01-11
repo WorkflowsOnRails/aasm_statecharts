@@ -57,25 +57,26 @@ module AASM_StateChart
     }
 
     START_NODE_STYLE = {
-      shape: :circle,
-      label: '',
-      style: :filled,
-      color: 'black',
-      fillcolor: 'black',
-      fixedsize: true,
-      width: 0.25,
-      height: 0.25,
+        shape: :doublecircle,
+        label: 'start',
+        #style: :filled,
+        color: 'black',
+        fontsize: 8,
+        #fillcolor: 'black',
+        fixedsize: true,
+        width: 0.3,
+        height: 0.3,
     }
 
     END_NODE_STYLE = {
-      shape: :doublecircle,
-      label: '',
-      style: :filled,
-      color: 'black',
-      fillcolor: 'black',
-      fixedsize: true,
-      width: 0.20,
-      height: 0.20,
+        shape: :doublecircle,
+        label: '',
+        style: :filled,
+        color: 'black',
+        fillcolor: 'black',
+        fixedsize: true,
+        width: 0.20,
+        height: 0.20,
     }
 
     ENTER_CALLBACKS = [:before_enter, :enter, :after_enter, :after_commit]
