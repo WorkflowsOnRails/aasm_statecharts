@@ -4,26 +4,16 @@ SimpleCov.start do
   add_filter "/spec/"
 end
 
+require 'rspec'
+
+require 'aasm'
+require 'active_record'
 
 require_relative '../lib/aasm_statechart'
 
-
-module SpecHelper
-  def name_of(s)
-    s.gsub(/\A"|"\Z/, '')
-  end
-
-  def find_edge(edges, from, to)
-    edge = edges.find do |each|
-      (name_of(each.node_one) == name_of(from) &&
-       name_of(each.node_two) == name_of(to))
-    end
-
-    expect(edge).to be_present
-    edge
-  end
-
-  def expect_label_matches(obj, regex)
-    expect(obj['label'].source).to match regex
-  end
-end
+require_relative '../spec/fixtures/no_aasm'
+require_relative '../spec/fixtures/empty_aasm'
+require_relative '../spec/fixtures/single_state'
+require_relative '../spec/fixtures/two_simple_states'
+require_relative '../spec/fixtures/claim'
+require_relative '../spec/fixtures/many_states'

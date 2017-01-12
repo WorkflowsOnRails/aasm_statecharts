@@ -2,65 +2,24 @@
 # the representation held by Ruby-Graphviz, not the files written
 # to disk; we're dependent on Ruby-Graphviz and dot getting it right.
 #
-# @author Brendan MacDonell
+# @author Brendan MacDonell, Ashley Engelund
+#
 
 require 'spec_helper'
 
-require 'aasm'
-require 'active_record'
+require 'statechart_helper'
+
 
 require 'tmpdir'
 require 'fileutils'
 
-class NoAasm
-end
-
-class EmptyAasm < ActiveRecord::Base
-  include AASM
-end
-
-class SingleState < ActiveRecord::Base
-  include AASM
-
-  aasm do
-    state :single,
-          initial: true,
-          enter: [:foo, :bar],
-          exit: [:baz, :quux]
-  end
-end
-
-class ManyStates < ActiveRecord::Base
-  include AASM
-
-  aasm do
-    state :a, initial: true, exit: :a_exit
-    state :b, enter: :b_enter
-    state :c, final: true
-
-    event :x do
-      transitions from: :a, to: :a, guard: :x_guard
-      transitions from: :b, to: :c
-    end
-
-    event :y do
-      transitions from: :a, to: :b, after: :y_action
-    end
-
-    event :z do
-      transitions from: :b, to: :a, after: [:z1, :z2]
-    end
-
-    event :many_from do
-      transitions from: [:a, :b], to: :z
-    end
-
-  end
-end
-
+OUT_DIR = './spec-out'
 
 describe AASM_StateChart do
   include SpecHelper
+
+  Dir.mkdir(OUT_DIR) unless Dir.exist? OUT_DIR
+
 
   it 'warns when given a class that does not have aasm included' do
     expect{AASM_StateChart::Renderer.new(NoAasm)}.to raise_error(AASM_StateChart::NoAASM_Error)
@@ -73,10 +32,10 @@ describe AASM_StateChart do
   it 'fails if an invalid file format is given' do
     renderer = AASM_StateChart::Renderer.new(SingleState)
 
-    Dir.mktmpdir do |dir|
-      filename = "#{dir}/single.png"
+    #Dir.mktmpdir do |dir|
+      filename = "#{OUT_DIR}/single.png"
       expect { renderer.save(filename, format: 'foobar') }.to raise_error StandardError
-    end
+    #end
   end
 
   it 'renders statecharts with single states' do
@@ -93,16 +52,54 @@ describe AASM_StateChart do
     expect_label_matches(nodes['single'], /entry \/ foo\(\); bar\(\);/)
     expect_label_matches(nodes['single'], /exit \/ baz\(\); quux\(\);/)
 
-    Dir.mktmpdir do |dir|
-      filename = "#{dir}/single.png"
+  #  Dir.mktmpdir do |dir|
+      filename = "#{OUT_DIR}/single.png"
       FileUtils.touch(filename)
       renderer.save(filename, format: 'png')
       expect(File.exists?(filename)).to be true
-    end
+  #  end
   end
 
-  describe 'renders statecharts of arbitrary complexity' do
-    let(:renderer) { AASM_StateChart::Renderer.new(ManyStates) }
+
+  describe 'renders the claim model ' do
+    let(:renderer) { AASM_StateChart::Renderer.new(Claim) }
+
+    describe 'edges' do
+
+      let(:edges) { renderer.graph.each_edge }
+
+      it 'length' do
+        expect(edges.length).to eq 5
+      end
+
+
+    end
+
+    describe 'nodes' do
+      let(:nodes) { renderer.graph.each_node }
+
+      it 'length' do
+        expect(nodes.length).to eq 5
+      end
+
+    end
+
+
+    it 'can save to .png' do
+
+     # Dir.mktmpdir do |dir|
+        filename = "#{OUT_DIR}/claim.png"
+        renderer.save(filename, format: 'png')
+        expect(File.exists?(filename)).to be true
+     # end
+
+    end
+
+  end
+
+
+  describe 'renders many states ' do
+    let(:renderer) { AASM_StateChart::Renderer.new(ManyStates, true) }
 
     describe 'edges' do
 
@@ -144,7 +141,7 @@ describe AASM_StateChart do
       let(:nodes) { renderer.graph.each_node }
 
       it 'length' do
-        expect(nodes.length).to eq 6
+        expect(nodes.length).to eq 7
       end
 
       it 'node a label' do
@@ -160,11 +157,11 @@ describe AASM_StateChart do
 
     it 'can save to .png' do
 
-      Dir.mktmpdir do |dir|
-        filename = "#{dir}/many.png"
-        renderer.save(filename, format: 'png')
-        expect(File.exists?(filename)).to be true
-      end
+      # Dir.mktmpdir do |dir|
+      filename = "#{OUT_DIR}/many.png"
+      renderer.save(filename, format: 'png')
+      expect(File.exists?(filename)).to be true
+      # end
 
     end
 

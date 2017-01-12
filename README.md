@@ -22,7 +22,7 @@ If you have installed `aasm_statecharts` via gem, you can invoke it using the co
 Example
 -------
 
-Considuer following model, which is assumed to be stored in `app/models/claim.rb`:
+Consider following model in `app/models/claim.rb`:
 ```rb
 class Claim < ActiveRecord::Base
   belongs_to :user
@@ -39,7 +39,7 @@ class Claim < ActiveRecord::Base
     event :submit do
       transitions from: :unsubmitted, to: :submitted,
                   guard: :accepting_claims?,
-                  on_transition: :notify_submitted
+                  after: :notify_submitted
     end
     event :return do
       transitions from: :submitted, to: :unsubmitted
@@ -65,7 +65,7 @@ end
 
 If we invoke `aasm_statecharts claim`, then the following diagram will be written to ./doc/claim.png:
 
-![Claim Statechart](https://raw.githubusercontent.com/WorkflowsOnRails/aasm_statecharts/master/doc/claim.png)
+![Claim Statechart](./doc/claim.png)
 
 
 Usage
@@ -73,11 +73,16 @@ Usage
 
 For more advanced usage information, see `aasm_statecharts --help`:
 
-    Usage: aasm_statecharts [options] <model> [models ...]
+    Usage: aasm_statechart [options] <model> [models ...]
+       Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel
+    
+       Options:
         -a, --all                        Render all models using AASM
         -d, --directory directory        Output to a specific directory (default: ./doc)
-        -t, --file-type type             Output in the specified format (default: png),
-    which must be one of the following: bmp, canon, dot, xdot, cmap, dia, eps, fig, gd,
-    gd2, gif, gtk, hpgl, ico, imap, cmapx, imap_np, cmapx_np, ismap, jpeg, jpg, jpe, mif,
-    mp, pcl, pdf, pic, plain, plain-ext, png, ps, ps2, svg, svgz, tga, tiff, tif, vml,
-    vmlz, vrml, vtx, wbmp, xlib, none.
+        -t, --table                      Create a state transition table
+        -f, --file-type type             Output in the specified format (default: png),
+                                         which must be one of the following: bmp, canon, dot, xdot, cmap, dia, eps, fig,
+                                          gd, gd2, gif, gtk, hpgl, ico, imap, cmapx, imap_np, cmapx_np, ismap, jpeg, jpg,
+                                          jpe, mif, mp, pcl, pdf, pic, plain, plain-ext, png, ps, ps2, svg, svgz, tga,
+                                          tiff, tif, vml, vmlz, vrml, vtx, wbmp, xlib, none.
+        -v, --version                    version of this gem

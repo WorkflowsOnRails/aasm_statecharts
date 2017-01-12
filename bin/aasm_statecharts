@@ -16,7 +16,7 @@ def parse_command_line!
   parser = OptionParser.new do |opts|
     opts.banner = "Usage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
 
-    opts.on_tail('--version', 'version of this gem') do
+    opts.on_tail('-v', '--version', 'version of this gem') do
       puts AASM_StateChart::VERSION
       exit(0)
     end
@@ -30,7 +30,11 @@ def parse_command_line!
       options[:directory] = directory
     end
 
-    opts.on('-t', '--file-type type',
+    opts.on('-t', '--table', 'Create a state transition table') do
+      options[:transition_table] = true
+    end
+
+    opts.on('-f', '--file-type type',
             "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
       format = format.downcase
 
@@ -90,10 +94,11 @@ load_rails!
 ensure_directory! options[:directory]
 
 models = options[:all] ? collect_all_models : collect_models(model_names)
+show_transition_table = options[:transition_table]
 
 models.each do |klass|
   name = klass.name.underscore
-  renderer = AASM_StateChart::Renderer.new(klass)
+  renderer = AASM_StateChart::Renderer.new(klass, show_transition_table)
   filename = "#{options[:directory]}/#{name}.#{options[:format]}"
   renderer.save(filename, format: options[:format])
   puts " * rendered #{name} to #{filename}"

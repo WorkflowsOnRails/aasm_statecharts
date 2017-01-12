@@ -1,5 +1,5 @@
 require 'graphviz'
-
+require_relative 'transition_table'
 
 # Library module than handles translating AASM state machines to statechart
 # diagrams.
@@ -79,17 +79,27 @@ module AASM_StateChart
         height: 0.20,
     }
 
+    TRANSITION_TABLE_NODE_STYLE = {
+        shape: :plaintext
+    }
+
+
     ENTER_CALLBACKS = [:before_enter, :enter, :after_enter, :after_commit]
     EXIT_CALLBACKS = [:before_exit, :exit, :after_exit]
+
     TRANSITION_CALLBACKS = [:before, :on_transition, :after]
 
+    TRANSITION_GUARDS = [:guards, :guard, :if]
 
-    def initialize(klass)
+
+    def initialize(klass, transition_table=false)
       @start_node = nil
       @end_node = nil
 
       @graph = GraphViz.new(:statechart)
       @graph.type = 'digraph'
+
+      @transition_table = TransitionTable.new if transition_table
 
       # ruby-graphviz is missing an API to set styles in bulk, so set them here
       GRAPH_STYLE.each { |k, v| @graph.graph[k] = v }
@@ -105,6 +115,17 @@ module AASM_StateChart
         else
           klass.aasm.states.each { |state| render_state(state) }
           klass.aasm.events.each { |event| render_event(event) unless event.blank? }
+
+          if transition_table
+            klass.aasm.events.each do |event|
+              unless event.blank?
+                event.transitions.each { |t| @transition_table.add_transition(t, conditionals: transition_guards(t))}
+              end
+            end
+            transition_node_opts = TRANSITION_TABLE_NODE_STYLE.merge({label: @transition_table.render})
+            @graph.add_nodes('State Transition Table', transition_node_opts)
+            # TODO  use add_graph instead?
+          end
         end
       end
 
@@ -120,6 +141,10 @@ module AASM_StateChart
       @graph
     end
 
+
+    def transition_table
+      @transition_table
+    end
 
     def start_node
       if @start_node.nil?
@@ -139,8 +164,10 @@ module AASM_StateChart
     end
 
 
-    #------
+
+    #======
     private
+
 
     def get_options(options, keys)
       options
@@ -154,6 +181,11 @@ module AASM_StateChart
       get_options(options, keys)
           .map { |callback| "#{callback}();" }
           .join(' ')
+    end
+
+
+    def transition_guards(transition)
+      get_options(transition.options, TRANSITION_GUARDS)
     end
 
 
@@ -181,8 +213,6 @@ module AASM_StateChart
     def render_event(event)
       event.transitions.each do |transition|
         chunks = [event.name]
-
-        guard = transition.options.fetch(:guard, nil)
 
         chunks << render_guard(transition.options.fetch(:guard, nil))
 
