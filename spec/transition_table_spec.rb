@@ -61,15 +61,15 @@ describe AASM_StateChart::TransitionTable do
       result = ''
       result << '<<TABLE CELLPADDING="2" CELLSPACING="0" TITLE="State Transition Table"><TR><TD>Old State</TD><TD>New State</TD><TD>Triggering Event</TD><TD>Only If All These Are True</TD></TR>'
 
-      result << '<TR><TD>a</TD><TD>a</TD><TD>x</TD><TD>x_guard</TD></TR>'
-      result << '<TR><TD>b</TD><TD>c</TD><TD>x</TD><TD></TD></TR>'
+      result << '<TR><TD>a</TD><TD>a</TD><TD>x</TD><TD>xa_guard</TD></TR>'
+      result << '<TR><TD>b</TD><TD>c</TD><TD>x</TD><TD>xbc1_guard xbc2_guard</TD></TR>'
 
-      result << '<TR><TD>a</TD><TD>b</TD><TD>y</TD><TD></TD></TR>'
+      result << '<TR><TD>a</TD><TD>b</TD><TD>y</TD><TD>y_is_ok?</TD></TR>'
 
-      result << '<TR><TD>b</TD><TD>a</TD><TD>z</TD><TD></TD></TR>'
+      result << '<TR><TD>b</TD><TD>a</TD><TD>z</TD><TD>z_is_ok? z_is_really_ok?</TD></TR>'
 
-      result << '<TR><TD>a</TD><TD>z</TD><TD>many_from</TD><TD></TD></TR>'
-      result << '<TR><TD>b</TD><TD>z</TD><TD>many_from</TD><TD></TD></TR>'
+      result << '<TR><TD>a</TD><TD>c</TD><TD>many_from</TD><TD>many_guard1 many_guard2</TD></TR>'
+      result << '<TR><TD>b</TD><TD>c</TD><TD>many_from</TD><TD>many_guard1 many_guard2</TD></TR>'
       result << '</TABLE>>'
 
       it_should_behave_like 'a correct HTML table renderer', ManyStates, result
