@@ -3,5 +3,3 @@
 
 Gemfile.lock
 coverage
-
-!/aasm_statecharts-*.gem
