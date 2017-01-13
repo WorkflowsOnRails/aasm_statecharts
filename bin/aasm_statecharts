@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
-require_relative '../lib/aasm_statechart'
+require_relative '../lib/aasm_statecharts'
 
 
 def parse_command_line!

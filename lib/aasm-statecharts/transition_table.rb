@@ -88,7 +88,7 @@ digraph structs {
 
 
     def transition_cols_order
-      [:old_state, :new_state, :triggering_event, :iff_conditions_met]
+      [:triggering_event, :old_state, :new_state,  :iff_conditions_met]
     end
 
 
@@ -99,7 +99,7 @@ digraph structs {
       {old_state: 'Old State',
        new_state: 'New State',
        triggering_event: 'Triggering Event',
-       iff_conditions_met: 'Only If All These Are True'}
+       iff_conditions_met: 'Iff All These Are True'}
 
     end
 

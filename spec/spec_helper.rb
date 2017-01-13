@@ -9,7 +9,7 @@ require 'rspec'
 require 'aasm'
 require 'active_record'
 
-require_relative '../lib/aasm_statechart'
+require_relative '../lib/aasm_statecharts'
 
 require_relative '../spec/fixtures/no_aasm'
 require_relative '../spec/fixtures/empty_aasm'

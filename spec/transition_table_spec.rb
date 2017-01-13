@@ -13,69 +13,67 @@
 
 require 'spec_helper'
 
+RSpec.shared_examples 'the rendered output matches' do | desc, example_aasm_class, expected_str |
+  let(:ttable_render) { renderer = AASM_StateChart::Renderer.new(example_aasm_class, true)
+  renderer.transition_table.render }
+  it "#{desc}" do
+    expect(ttable_render).to match(/#{Regexp.escape(expected_str)}/)
+  end
+end
 
-RSpec.shared_examples 'a correct HTML table renderer' do | example_aasm_class, result |
-  let(:ttable) {  renderer = AASM_StateChart::Renderer.new(example_aasm_class, true)
-  renderer.transition_table}
+RSpec.shared_examples 'rendered table matches' do | desc, example_aasm_class, start, table_body, ending|
+  let(:ttable_render) { renderer = AASM_StateChart::Renderer.new(example_aasm_class, true)
+                 renderer.transition_table.render }
 
-  it 'creates the correct HTML table' do
-    expect(ttable.render).to eq(result)
+  it "#{desc}" do
+    expect(ttable_render).to match(/#{Regexp.escape(start + table_body + ending)}/)
   end
 
 end
 
 
-
 describe AASM_StateChart::TransitionTable do
 
-  describe 'creates a state transition table' do
+  table_start = '<<TABLE CELLPADDING="2" CELLSPACING="0" TITLE="State Transition Table"><TR><TD>Triggering Event</TD><TD>Old State</TD><TD>New State</TD><TD>Iff All These Are True</TD></TR>'
+  table_end = '</TABLE>>'
 
-
-    describe 'no transitions for the single states example' do
-
-      result = ''
-      result << '<<TABLE CELLPADDING="2" CELLSPACING="0" TITLE="State Transition Table"><TR><TD>Old State</TD><TD>New State</TD><TD>Triggering Event</TD><TD>Only If All These Are True</TD></TR>'
-      result << '</TABLE>>'
-
-      it_should_behave_like 'a correct HTML table renderer', SingleState, result
-
-    end
-
-
-
-    describe 'the two simple states example' do
-
-      result = ''
-      result << '<<TABLE CELLPADDING="2" CELLSPACING="0" TITLE="State Transition Table"><TR><TD>Old State</TD><TD>New State</TD><TD>Triggering Event</TD><TD>Only If All These Are True</TD></TR>'
-      result << '<TR><TD>first</TD><TD>second</TD><TD>from_1_to_2</TD><TD>forwards_is_allowed</TD></TR>'
-      result << '<TR><TD>second</TD><TD>first</TD><TD>from_2_to_1</TD><TD>backwards_is_allowed</TD></TR>'
-      result << '</TABLE>>'
-
-      it_should_behave_like 'a correct HTML table renderer', TwoSimpleStates, result
-
-    end
-
-
-    describe 'many states example' do
-
-      result = ''
-      result << '<<TABLE CELLPADDING="2" CELLSPACING="0" TITLE="State Transition Table"><TR><TD>Old State</TD><TD>New State</TD><TD>Triggering Event</TD><TD>Only If All These Are True</TD></TR>'
-
-      result << '<TR><TD>a</TD><TD>a</TD><TD>x</TD><TD>xa_guard</TD></TR>'
-      result << '<TR><TD>b</TD><TD>c</TD><TD>x</TD><TD>xbc1_guard xbc2_guard</TD></TR>'
-
-      result << '<TR><TD>a</TD><TD>b</TD><TD>y</TD><TD>y_is_ok?</TD></TR>'
-
-      result << '<TR><TD>b</TD><TD>a</TD><TD>z</TD><TD>z_is_ok? z_is_really_ok?</TD></TR>'
-
-      result << '<TR><TD>a</TD><TD>c</TD><TD>many_from</TD><TD>many_guard1 many_guard2</TD></TR>'
-      result << '<TR><TD>b</TD><TD>c</TD><TD>many_from</TD><TD>many_guard1 many_guard2</TD></TR>'
-      result << '</TABLE>>'
-
-      it_should_behave_like 'a correct HTML table renderer', ManyStates, result
-
-    end
+  describe 'common to all' do
+    it_should_behave_like 'the rendered output matches', '<TABLE...>, header row', SingleState, table_start
+    it_should_behave_like 'the rendered output matches', '</TABLE...> ending', SingleState, table_end
   end
+
+
+  describe 'no transitions for the single states example' do
+    it_should_behave_like 'rendered table matches', 'no body rows (just header and ending)', SingleState, table_start, '', table_end
+  end
+
+
+  describe 'the two simple states example' do
+    table_body = ''
+    table_body << '<TR><TD>from_1_to_2</TD><TD>first</TD><TD>second</TD><TD>forwards_is_allowed</TD></TR>'
+    table_body << '<TR><TD>from_2_to_1</TD><TD>second</TD><TD>first</TD><TD>backwards_is_allowed</TD></TR>'
+
+    it_should_behave_like 'rendered table matches', 'two simple events', TwoSimpleStates, table_start, table_body, table_end
+
+  end
+
+
+  describe 'many states example' do
+    table_body = ''
+    table_body << '<TR><TD>x</TD><TD>a</TD><TD>a</TD><TD>xa_guard</TD></TR>'
+    table_body << '<TR><TD>x</TD><TD>b</TD><TD>c</TD><TD>xbc1_guard xbc2_guard</TD></TR>'
+
+    table_body << '<TR><TD>y</TD><TD>a</TD><TD>b</TD><TD>y_is_ok?</TD></TR>'
+
+    table_body << '<TR><TD>z</TD><TD>b</TD><TD>a</TD><TD>z_is_ok? z_is_really_ok?</TD></TR>'
+
+    table_body << '<TR><TD>many_from</TD><TD>a</TD><TD>c</TD><TD>many_guard1 many_guard2</TD></TR>'
+    table_body << '<TR><TD>many_from</TD><TD>b</TD><TD>c</TD><TD>many_guard1 many_guard2</TD></TR>'
+
+    it_should_behave_like 'rendered table matches', 'many events with guards', ManyStates, table_start, table_body, table_end
+
+  end
+
 
 end
 
