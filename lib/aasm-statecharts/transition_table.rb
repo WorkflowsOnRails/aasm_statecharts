@@ -35,6 +35,9 @@ module AASM_StateChart
 
 =begin
 
+Example of a HTML table in a .dot file:
+---------------------------------------
+
 digraph structs {
     node [shape=plaintext]
     struct1 [label=<

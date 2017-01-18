@@ -1,6 +1,8 @@
 require 'graphviz'
 require_relative 'transition_table'
 
+require_relative 'chart_renderer'
+
 # Library module than handles translating AASM state machines to statechart
 # diagrams.
 #
@@ -34,204 +36,72 @@ module AASM_StateChart
   end
 
 
-  class Renderer
-
-    FORMATS = GraphViz::Constants::FORMATS
-
-    GRAPH_STYLE = {
-        rankdir: :TB,
-    }
-
-    NODE_STYLE = {
-        shape: :Mrecord,
-        fontname: 'Arial',
-        fontsize: 10,
-        penwidth: 0.7,
-    }
-
-    EDGE_STYLE = {
-        dir: :forward,
-        fontname: 'Arial',
-        fontsize: 9,
-        penwidth: 0.7,
-    }
-
-    START_NODE_STYLE = {
-        shape: :doublecircle,
-        label: 'start',
-        #style: :filled,
-        color: 'black',
-        fontsize: 8,
-        #fillcolor: 'black',
-        fixedsize: true,
-        width: 0.3,
-        height: 0.3,
-    }
-
-    END_NODE_STYLE = {
-        shape: :doublecircle,
-        label: '',
-        style: :filled,
-        color: 'black',
-        fillcolor: 'black',
-        fixedsize: true,
-        width: 0.20,
-        height: 0.20,
-    }
-
-    TRANSITION_TABLE_NODE_STYLE = {
-        shape: :plaintext
-    }
+  class CLI
 
 
-    ENTER_CALLBACKS = [:before_enter, :enter, :after_enter, :after_commit]
-    EXIT_CALLBACKS = [:before_exit, :exit, :after_exit]
+    def initialize(options)
 
-    TRANSITION_CALLBACKS = [:before, :on_transition, :after]
+      @output_dir = Dir.mkdir(options[:directory]) unless Dir.exists? options[:directory]
 
-    TRANSITION_GUARDS = [:guards, :guard, :if]
+      @models = load_models options[:all], options[:models]
 
-
-    def initialize(klass, transition_table=false)
-      @start_node = nil
-      @end_node = nil
-
-      @graph = GraphViz.new(:statechart)
-      @graph.type = 'digraph'
-
-      @transition_table = TransitionTable.new if transition_table
-
-      # ruby-graphviz is missing an API to set styles in bulk, so set them here
-      GRAPH_STYLE.each { |k, v| @graph.graph[k] = v }
-      NODE_STYLE.each { |k, v| @graph.node[k] = v }
-      EDGE_STYLE.each { |k, v| @graph.edge[k] = v }
+      @show_transition_table = options[:transition_table]
 
 
-      if !(klass.respond_to? :aasm)
-        raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
-      else
-        if klass.aasm.states.empty?
-          raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
-        else
-          klass.aasm.states.each { |state| render_state(state) }
-          klass.aasm.events.each { |event| render_event(event) unless event.blank? }
+    end
 
-          if transition_table
-            klass.aasm.events.each do |event|
-              unless event.blank?
-                event.transitions.each { |t| @transition_table.add_transition(t, conditionals: transition_guards(t))}
-              end
-            end
-            transition_node_opts = TRANSITION_TABLE_NODE_STYLE.merge({label: @transition_table.render})
-            @graph.add_nodes('State Transition Table', transition_node_opts)
-            # TODO  use add_graph instead?
-          end
-        end
+
+    def run
+
+      @models.each do |klass|
+
+        name = klass.name.underscore
+
+        renderer = AASM_StateChart::Renderer.new(klass, @show_transition_table)
+
+        filename = "#{@output_dir}/#{name}.#{options[:format]}"
+
+        renderer.save(filename, format: options[:format])
+
+        puts " * rendered #{name} to #{filename}"
       end
 
     end
 
 
-    def save(filename, format: 'png')
-      @graph.output({format => filename})
-    end
-
-
-    def graph
-      @graph
-    end
-
-
-    def transition_table
-      @transition_table
-    end
-
-    def start_node
-      if @start_node.nil?
-        @start_node = @graph.add_nodes(SecureRandom.uuid, **START_NODE_STYLE)
-      end
-
-      @start_node
-    end
-
-
-    def end_node
-      if @end_node.nil?
-        @end_node = @graph.add_nodes(SecureRandom.uuid, **END_NODE_STYLE)
-      end
-
-      @end_node
-    end
-
-
-
-    #======
+    # - - - - - - - -
     private
 
-
-    def get_options(options, keys)
-      options
-          .select { |key| keys.include? key }
-          .values
-          .flatten
-    end
-
-
-    def get_callbacks(options, keys)
-      get_options(options, keys)
-          .map { |callback| "#{callback}();" }
-          .join(' ')
-    end
-
-
-    def transition_guards(transition)
-      get_options(transition.options, TRANSITION_GUARDS)
-    end
-
-
-    def render_state(state)
-      enter_callbacks = get_callbacks(state.options, ENTER_CALLBACKS)
-      exit_callbacks = get_callbacks(state.options, EXIT_CALLBACKS)
-
-      callbacks_list = []
-      callbacks_list << "entry / #{enter_callbacks}" if enter_callbacks.present?
-      callbacks_list << "exit / #{exit_callbacks}" if exit_callbacks.present?
-      label = "{#{state.display_name}|#{callbacks_list.join('\l')}}"
-
-      node = @graph.add_nodes(state.name.to_s, label: label)
-
-      if state.options.fetch(:initial, false)
-        @graph.add_edges(start_node, node)
-
-      elsif state.options.fetch(:final, false)
-        @graph.add_edges(node, end_node)
-
+    #  used to get all subclasses of ActiveRecord.  Is there a way to get them without loading all of rails?
+    def load_rails!
+      unless File.exists? './config/environment.rb'
+        script_name = File.basename $PROGRAM_NAME
+        puts 'error: unable to find ./config/environment.rb.'
+        puts "Please run #{script_name} from the root of your Rails application."
+        exit(1)
       end
+
+      require './config/environment'
     end
 
 
-    def render_event(event)
-      event.transitions.each do |transition|
-        chunks = [event.name]
+    def load_models(load_all, models_named)
 
-        chunks << render_guard(transition.options.fetch(:guard, nil))
+      @models = load_all ? collect_all_models : load_models_named(models_named)
 
-        chunks << render_callbacks(get_callbacks(transition.options, TRANSITION_CALLBACKS))
-
-        label = " #{chunks.join(' ')} "
-
-        @graph.add_edges(transition.from.to_s, transition.to.to_s, label: label)
-      end
     end
 
 
-    def render_guard(guard)
-      guard.present? ? "[#{guard}]" : ''
+    def load_models_named(model_names)
+      model_names.map { |model_name| model_name.classify.constantize }
     end
 
 
-    def render_callbacks(callbacks)
-      callbacks.present? ? '/ ' << callbacks : ''
+    def collect_all_models
+      Rails::Application.subclasses.first.eager_load!
+      ActiveRecord::Base.descendants.select { |klass| klass.respond_to? :aasm }
     end
+
   end
+
 end
