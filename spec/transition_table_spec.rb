@@ -14,7 +14,7 @@
 require 'spec_helper'
 
 RSpec.shared_examples 'the rendered output matches' do | desc, example_aasm_class, expected_str |
-  let(:ttable_render) { renderer = AASM_StateChart::Renderer.new(example_aasm_class, true)
+  let(:ttable_render) { renderer = AASM_StateChart::Chart_Renderer.new(example_aasm_class, true)
   renderer.transition_table.render }
   it "#{desc}" do
     expect(ttable_render).to match(/#{Regexp.escape(expected_str)}/)
@@ -22,7 +22,7 @@ RSpec.shared_examples 'the rendered output matches' do | desc, example_aasm_clas
 end
 
 RSpec.shared_examples 'rendered table matches' do | desc, example_aasm_class, start, table_body, ending|
-  let(:ttable_render) { renderer = AASM_StateChart::Renderer.new(example_aasm_class, true)
+  let(:ttable_render) { renderer = AASM_StateChart::Chart_Renderer.new(example_aasm_class, true)
                  renderer.transition_table.render }
 
   it "#{desc}" do

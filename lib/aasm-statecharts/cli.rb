@@ -35,6 +35,9 @@ module AASM_StateChart
   class NoStates_Error < AASM_StateChart_Error
   end
 
+  class BadFormat_Error < AASM_StateChart_Error
+  end
+
 
   class CLI
 
@@ -47,6 +50,7 @@ module AASM_StateChart
 
       @show_transition_table = options[:transition_table]
 
+      verify_file_format options[:format]
 
     end
 
@@ -57,13 +61,28 @@ module AASM_StateChart
 
         name = klass.name.underscore
 
-        renderer = AASM_StateChart::Renderer.new(klass, @show_transition_table)
+        if !(klass.respond_to? :aasm)
+          raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
 
-        filename = "#{@output_dir}/#{name}.#{options[:format]}"
+        else
 
-        renderer.save(filename, format: options[:format])
+          if klass.aasm.states.empty?
+            raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
+          else
 
-        puts " * rendered #{name} to #{filename}"
+            renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table)
+
+            filename = "#{@output_dir}/#{name}.#{options[:format]}"
+
+            renderer.save(filename, format: options[:format])
+
+            puts " * rendered #{name} to #{filename}"
+
+          end
+
+        end
+
+
       end
 
     end
@@ -100,6 +119,15 @@ module AASM_StateChart
     def collect_all_models
       Rails::Application.subclasses.first.eager_load!
       ActiveRecord::Base.descendants.select { |klass| klass.respond_to? :aasm }
+    end
+
+
+    def verify_file_format format_extension
+      valid_formats = GraphViz::Constants::FORMATS
+      unless valid_formats.include? format_extension
+        valid_list = valid_formats.join ', '
+        raise BadFormat_Error, "ERROR: File format #{format_extension} is not a valid format.\n   These are the valid formats:\n  #{valid_list}"
+      end
     end
 
   end

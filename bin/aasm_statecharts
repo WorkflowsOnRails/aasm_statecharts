@@ -11,7 +11,7 @@ def parse_command_line!
     format: 'png',
   }
 
-  formats = AASM_StateChart::Renderer::FORMATS.join(', ')
+  formats = AASM_StateChart::Chart_Renderer::FORMATS.join(', ')
 
   parser = OptionParser.new do |opts|
     opts.banner = "Usage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
@@ -38,7 +38,7 @@ def parse_command_line!
             "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
       format = format.downcase
 
-      unless AASM_StateChart::Renderer::FORMATS.include?(format)
+      unless AASM_StateChart::Chart_Renderer::FORMATS.include?(format)
         puts "error: #{format} is not a recognized file format."
         puts "The file format must be one of the following: #{formats}."
         exit(1)

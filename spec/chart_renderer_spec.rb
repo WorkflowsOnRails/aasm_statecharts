@@ -9,11 +9,8 @@ require 'spec_helper'
 require 'statechart_helper'
 
 
-OUT_DIR = './spec/spec-out'
-
-
 RSpec.shared_examples 'saves to a file' do |aasm_model, output_format|
-  renderer = AASM_StateChart::Renderer.new(aasm_model)
+  renderer = AASM_StateChart::Chart_Renderer.new(aasm_model)
 
   it "can save to a #{output_format} file" do
     filename = "#{OUT_DIR}/#{aasm_model.name.underscore}.#{output_format}"
@@ -38,30 +35,14 @@ end
 
 
 
-describe AASM_StateChart do
+describe AASM_StateChart::Chart_Renderer do
   include SpecHelper
 
   Dir.mkdir(OUT_DIR) unless Dir.exist? OUT_DIR
 
-
-  it 'warns when given a class that does not have aasm included' do
-    expect { AASM_StateChart::Renderer.new(NoAasm) }.to raise_error(AASM_StateChart::NoAASM_Error)
-  end
-
-  it 'warns when given a class that has no states defined' do
-    expect { AASM_StateChart::Renderer.new(EmptyAasm) }.to raise_error(AASM_StateChart::NoStates_Error)
-  end
-
-  it 'fails if an invalid file format is given' do
-    renderer = AASM_StateChart::Renderer.new(SingleState)
-    filename = "#{OUT_DIR}/single.png"
-    expect { renderer.save(filename, format: 'foobar') }.to raise_error StandardError
-  end
-
-
   describe 'basic tests with single state example' do
 
-    renderer = AASM_StateChart::Renderer.new(SingleState)
+    renderer = AASM_StateChart::Chart_Renderer.new(SingleState)
 
     it 'the single state example' do
 
@@ -91,7 +72,7 @@ describe AASM_StateChart do
   end
 
   describe 'the claim model example' do
-    renderer = AASM_StateChart::Renderer.new(Claim)
+    renderer = AASM_StateChart::Chart_Renderer.new(Claim)
 
     it_should_behave_like 'it has this many edges', renderer, 5
 
@@ -103,7 +84,7 @@ describe AASM_StateChart do
 
 
   describe 'two simple states example' do
-    renderer = AASM_StateChart::Renderer.new(TwoSimpleStates)
+    renderer = AASM_StateChart::Chart_Renderer.new(TwoSimpleStates)
 
     it_should_behave_like 'it has this many edges', renderer, 3
 
@@ -116,7 +97,7 @@ describe AASM_StateChart do
 
   # TODO output to a dot file and check that
   describe 'many states example' do
-    renderer = AASM_StateChart::Renderer.new(ManyStates, true)
+    renderer = AASM_StateChart::Chart_Renderer.new(ManyStates, true)
 
     describe 'formatting' do
 

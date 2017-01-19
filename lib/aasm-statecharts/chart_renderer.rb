@@ -34,7 +34,7 @@ module AASM_StateChart
   end
 
 
-  class Renderer
+  class Chart_Renderer
 
     @CONF = {}
 
@@ -91,7 +91,7 @@ module AASM_StateChart
     end
 
 
-    def save(filename, format: 'png')  # TODO config default output format
+    def save(filename, format: 'png') # TODO config default output format
       @graph.output({format => filename})
     end
 
@@ -152,8 +152,8 @@ module AASM_StateChart
       exit_callbacks = get_callbacks(state.options, EXIT_CALLBACKS)
 
       callbacks_list = []
-      callbacks_list << "entry / #{enter_callbacks}" if enter_callbacks.present?  # TODO config entry (should use i18n)
-      callbacks_list << "exit / #{exit_callbacks}" if exit_callbacks.present?  # TODO config exit (should use i18n)
+      callbacks_list << "entry / #{enter_callbacks}" if enter_callbacks.present? # TODO config entry (should use i18n)
+      callbacks_list << "exit / #{exit_callbacks}" if exit_callbacks.present? # TODO config exit (should use i18n)
       label = "{#{state.display_name}|#{callbacks_list.join('\l')}}"
 
       node = @graph.add_nodes(state.name.to_s, label: label)
@@ -198,7 +198,18 @@ module AASM_StateChart
 
     def init_config
 
-      @default_config = {
+      @default_config = load_default_config
+
+      # merge with anything set in aasm_statecharts.config file
+      config_fn = 'aasm_statecharts.yml'
+
+      config_file = YAML.load(config_fn) if File.exist? config_fn
+
+    end
+
+
+    def load_default_config
+      {
           formats: GraphViz::Constants::FORMATS,
 
           graph_style: {
@@ -247,9 +258,7 @@ module AASM_StateChart
           }
 
       }
-
     end
-
 
   end
 end

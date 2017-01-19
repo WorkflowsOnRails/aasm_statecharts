@@ -11,9 +11,6 @@ require 'active_record'
 
 require_relative '../lib/aasm_statecharts'
 
-require_relative '../spec/fixtures/no_aasm'
-require_relative '../spec/fixtures/empty_aasm'
-require_relative '../spec/fixtures/single_state'
-require_relative '../spec/fixtures/two_simple_states'
-require_relative '../spec/fixtures/claim'
-require_relative '../spec/fixtures/many_states'
+Dir[File.join(__dir__, 'fixtures','*.rb')].each { |file| require file }
+
+OUT_DIR = './spec/spec-out'
