@@ -21,7 +21,7 @@ def parse_command_line!
       exit(0)
     end
 
-    opts.on('-a', '--all', 'Render all models using AASM') do
+    opts.on('-a', '--all', 'Render all ActiveRecord models using AASM') do
       options[:all] = true
     end
 
@@ -60,46 +60,9 @@ def parse_command_line!
   [options, ARGV]
 end
 
-
-def load_rails!
-  unless File.exists? './config/environment.rb'
-    script_name = File.basename $PROGRAM_NAME
-    puts 'error: unable to find ./config/environment.rb.'
-    puts "Please run #{script_name} from the root of your Rails application."
-    exit(1)
-  end
-
-  require './config/environment'
+optparse.parse!
+ARGV.each do |model|
+  options[:models] << model
 end
 
-
-def ensure_directory!(directory)
-  Dir.mkdir(directory) unless Dir.exists? directory
-end
-
-
-def collect_models(model_names)
-  model_names.map { |model_name| model_name.classify.constantize }
-end
-
-
-def collect_all_models
-  Rails::Application.subclasses.first.eager_load!
-  ActiveRecord::Base.descendants.select { |klass| klass.respond_to? :aasm }
-end
-
-
-options, model_names = parse_command_line!
-load_rails!
-ensure_directory! options[:directory]
-
-models = options[:all] ? collect_all_models : collect_models(model_names)
-show_transition_table = options[:transition_table]
-
-models.each do |klass|
-  name = klass.name.underscore
-  renderer = AASM_StateChart::Renderer.new(klass, show_transition_table)
-  filename = "#{options[:directory]}/#{name}.#{options[:format]}"
-  renderer.save(filename, format: options[:format])
-  puts " * rendered #{name} to #{filename}"
-end
+AASM_StateChart::AASM_Statecharts.new(options).run
