@@ -38,19 +38,26 @@ module AASM_StateChart
   class BadFormat_Error < AASM_StateChart_Error
   end
 
+  class BadConfigFile_Error < AASM_StateChart_Error
+  end
+
+  class BadOutputDir_Error < AASM_StateChart_Error
+  end
 
   class CLI
 
 
     def initialize(options)
 
-      @output_dir = Dir.mkdir(options[:directory]) unless Dir.exists? options[:directory]
+      @output_dir = get_output_dir options.fetch(:directory, '')
 
       @models = load_models options[:all], options[:models]
 
       @show_transition_table = options[:transition_table]
 
-      verify_file_format options[:format]
+      @format = verify_file_format options[:format]
+
+      @config_options = Hash.new.merge(load_config_file(options.fetch(:config_file, '')))
 
     end
 
@@ -70,11 +77,11 @@ module AASM_StateChart
             raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
           else
 
-            renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table)
+            renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table, @config_options)
 
-            filename = "#{@output_dir}/#{name}.#{options[:format]}"
+            filename = File.join(@output_dir, "#{name}.#{@format}")
 
-            renderer.save(filename, format: options[:format])
+            renderer.save(filename, format: @format)
 
             puts " * rendered #{name} to #{filename}"
 
@@ -90,6 +97,15 @@ module AASM_StateChart
 
     # - - - - - - - -
     private
+
+
+    def get_output_dir options_dir
+      out_dir = options_dir == '' ? '.' : options_dir
+
+      Dir.mkdir(out_dir) unless Dir.exists? out_dir
+      out_dir
+    end
+
 
     #  used to get all subclasses of ActiveRecord.  Is there a way to get them without loading all of rails?
     def load_rails!
@@ -112,7 +128,7 @@ module AASM_StateChart
 
 
     def load_models_named(model_names)
-      model_names.map { |model_name| model_name.classify.constantize }
+      model_names.map { |model_name| model_name.camelize.constantize }
     end
 
 
@@ -128,7 +144,41 @@ module AASM_StateChart
         valid_list = valid_formats.join ', '
         raise BadFormat_Error, "ERROR: File format #{format_extension} is not a valid format.\n   These are the valid formats:\n  #{valid_list}"
       end
+
+      format_extension
     end
+
+
+    def load_config_file config_fn
+      parsed_config = {}
+      unless config_fn == ''
+        File.open config_fn do |cf|
+          begin
+            parsed_config = Psych.safe_load(cf)
+          rescue Psych::SyntaxError => ex
+            ex.message
+          end
+        end
+
+      end
+
+      # need to flatten these 1 level to get them into what GraphViz expect
+      parsed_opts = {}
+      parsed_config.each do |k, v|
+        parsed_config[k].each do |k2, v2|
+          parsed_opts[k2] = v2
+        end
+      end
+      symbolize_keys parsed_opts
+    end
+
+
+    # GraphViz expects keys to be symbols, but it's only safe (and user friendly) to have
+    # keys as strings in a config file
+    def symbolize_keys(hash)
+      hash.each_with_object({}) { |(k, v), h| h[k.to_sym] = v.is_a?(Hash) ? symbolize_keys(v) : v }
+    end
+
 
   end
 
