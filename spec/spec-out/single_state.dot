@@ -1,0 +1,37 @@
+digraph statechart {
+	graph [bb="0,0,142.02,116.98",
+		bgcolor=white,
+		rankdir=TB
+	];
+	node [color=blue,
+		fontcolor=red,
+		fontname="Courier New",
+		fontsize=10,
+		label="\N",
+		penwidth=0.7,
+		shape=Mrecord
+	];
+	edge [color=green,
+		dir=forward,
+		fontcolor=blue,
+		fontname="Courier New",
+		fontsize=8,
+		penwidth=0.7
+	];
+	single	 [height=0.70812,
+		label="{Single|entry / foo(); bar();\lexit / baz(); quux();}",
+		pos="71.01,25.492",
+		width=1.9725];
+	"7bb50449-8afa-4e71-a254-8d9c2fd3bf8f"	 [color=black,
+		fillcolor=green,
+		fixedsize=true,
+		fontname=Ariel,
+		fontsize=7,
+		height=0.41667,
+		label=start,
+		pos="71.01,101.98",
+		shape=doublecircle,
+		style=filled,
+		width=0.41667];
+	"7bb50449-8afa-4e71-a254-8d9c2fd3bf8f" -> single	 [pos="e,71.01,50.702 71.01,86.973 71.01,79.563 71.01,70.109 71.01,60.89"];
+}
