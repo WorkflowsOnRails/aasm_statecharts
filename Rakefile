@@ -27,6 +27,11 @@ task :pp_graphviz_edge_options do
   pp graphviz_options_for(/E/)
 end
 
+desc "GraphViz color names"
+task :graphviz_colors do
+  pp GraphViz::Utils::Colors::COLORS
+end
+
 
 def graphviz_options_for(regex)
   GraphViz::Constants::getAttrsFor(regex)
