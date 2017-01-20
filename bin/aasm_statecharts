@@ -1,68 +1,79 @@
-#!/usr/bin/env ruby
+#!/Users/ashleyengelund/.rbenv/versions/2.3.1/bin/ruby -w
 
-require 'optparse'
-require_relative '../lib/aasm_statecharts'
+require 'optionparser'
+require 'graphviz/constants'
+
+require_relative File.join(__dir__, '..','lib','aasm_statecharts')
 
 
-def parse_command_line!
-  options = {
+options = {
     all: false,
-    directory: './doc',
     format: 'png',
-  }
+    directory: './doc'
+}
 
-  formats = AASM_StateChart::Chart_Renderer::FORMATS.join(', ')
+formats = GraphViz::Constants::FORMATS.join(', ')
 
-  parser = OptionParser.new do |opts|
-    opts.banner = "Usage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
 
-    opts.on_tail('-v', '--version', 'version of this gem') do
-      puts AASM_StateChart::VERSION
-      exit(0)
-    end
-
-    opts.on('-a', '--all', 'Render all ActiveRecord models using AASM') do
-      options[:all] = true
-    end
-
-    opts.on('-d', '--directory directory',
-            "Output to a specific directory (default: #{options[:directory]})") do |directory|
-      options[:directory] = directory
-    end
-
-    opts.on('-t', '--table', 'Create a state transition table') do
-      options[:transition_table] = true
-    end
-
-    opts.on('-f', '--file-type type',
-            "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
-      format = format.downcase
-
-      unless AASM_StateChart::Chart_Renderer::FORMATS.include?(format)
-        puts "error: #{format} is not a recognized file format."
-        puts "The file format must be one of the following: #{formats}."
-        exit(1)
-      end
-
-      options[:format] = format
-    end
-
-    opts
+  opts.on_tail('-v', '--version', 'version of this gem') do
+    puts AASM_StateChart::VERSION
+    exit(0)
   end
 
-  parser.parse!
-
-  if !options[:all] && ARGV.empty?
-    puts parser
-    exit(1)
+  opts.on('-a', '--all', 'Render all ActiveRecord models using AASM') do
+    options[:all] = true
   end
 
-  [options, ARGV]
+  opts.on('-d', '--directory DIRECTORY',
+          "Output to a specific directory (default: #{options[:directory]})") do |directory|
+    options[:directory] = directory
+  end
+
+  opts.on('-c', '--config FILE', 'Use the config file named FILE') do |config_file|
+    options[:config_file] = config_file
+  end
+
+  opts.on('-t', '--table', 'Create a state transition table') do
+    options[:transition_table] = true
+  end
+
+  opts.on('-f', '--file-type TYPE',
+          "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
+    format = format.downcase
+
+    unless AASM_StateChart::Chart_Renderer::FORMATS.include?(format)
+      puts "error: #{format} is not a recognized file format."
+      puts "The file format must be one of the following: #{formats}."
+      exit(1)
+    end
+
+    options[:format] = format
+  end
+
+  opts
 end
 
-optparse.parse!
+parser.parse!
+
+
+if !options[:all] && ARGV.empty?
+  puts "\n Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n"
+  puts parser
+  exit(1)
+end
+
+options[:directory] =  './doc' unless options.has_key? :directory  # not needed
+
+unless File.exist?(options[:config_file])
+  puts "\n Error:  The configuration file #{options[:config_file]} cannot be found.\n\n"
+  exit(2)
+end
+
 ARGV.each do |model|
   options[:models] << model
 end
 
-AASM_StateChart::AASM_Statecharts.new(options).run
+
+AASM_StateChart::AASM_StateCharts.new(options).run
