@@ -7,6 +7,7 @@ gem 'ruby-graphviz'
 gem 'aasm', '>= 4.0'
 
 group :development do
+  gem 'rake'
   gem 'rspec', '~> 3.0', '>= 3.0'
   gem 'simplecov', '~> 0.10', '>= 0.10'
 end
