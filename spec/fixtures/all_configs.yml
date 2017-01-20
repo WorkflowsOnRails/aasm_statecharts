@@ -1,0 +1,240 @@
+# see hOpts in def output( hOpts = {} ) in graphviz.rb
+graph_style:
+  use:        # the graphviz program to use.  one of:  "dot", "neato", "twopi", "fdp", "circo", "sfdp"
+  path:       # path to the program to use
+  errors:     # DOT error level (default 1)
+                  #   * 0 = Error + Warning
+                  #   * 1 = Error
+                  #   * 2 = none
+  extlib:     # external library to use (will be passed to the program with the '-l' option
+  scale:      # Scale input by 'v' (=72)
+  inverty:    # Invert y coordinate in output
+  no_layout:  # No layout mode 'v' (=1)
+  reduce:     # Reduce graph
+  Lg:         # don't use grid
+  LO:         # use old attractive force
+  Ln:         # Set number of iterations to i
+  LU:         # Set unscaled factor to i
+  LC:         # Set overlap expansion factor to v
+  LT:         # Set temperature (temperature factor) to v
+  nothugly:   # not hugly option. format must be 'svg' (requires ruby-xslt or libxslt-ruby)
+  
+  'Damping':    # GvDouble
+  'K':    # GvDouble
+  'URL':    # EscString
+  '_background':    # EscString
+  'bb':    # Rect
+  'bgcolor':    # Color
+  'center':    # GvBool
+  'charset':    # EscString
+  'clusterrank':    # EscString
+  'colorscheme':    # EscString
+  'comment':    # EscString
+  'compound':    # GvBool
+  'concentrate':    # GvBool
+  'defaultdist':    # GvDouble
+  'dim':    # EscString
+  'dimen':    # EscString
+  'diredgeconstraints':    # EscString
+  'dpi':    # GvDouble
+  'epsilon':    # GvDouble
+  'esep':    # EscString
+  'fontcolor':    # Color
+  'fontname':    # EscString
+  'fontnames':    # EscString
+  'fontpath':    # EscString
+  'fontsize':    # GvDouble
+  'forcelabels':    # GvBool
+  'gradientangle':    # EscString
+  'href':    # EscString
+  'id':    # EscString
+  'imagepath':    # EscString
+  'inputscale':    # GvDouble
+  'label':    # LblString
+  'label_scheme':    # EscString
+  'labeljust':    # EscString
+  'labelloc':    # EscString
+  'landscape':    # GvBool
+  'layerlistsep':    # EscString
+  'layers':    # EscString
+  'layerselect':    # EscString
+  'layersep':    # EscString
+  'layout':    # EscString
+  'levels':    # EscString
+  'levelsgap':    # GvDouble
+  'lheight':    # GvDouble
+  'lp':    # EscString
+  'lwidth':    # GvDouble
+  'margin':    # EscString
+  'maxiter':    # EscString
+  'mclimit':    # GvDouble
+  'mindist':    # GvDouble
+  'mode':    # EscString
+  'model':    # EscString
+  'mosek':    # GvBool
+  'nodesep':    # GvDouble
+  'nojustify':    # GvBool
+  'normalize':    # GvBool
+  'nslimit':    # GvDouble
+  'nslimit1':    # GvDouble
+  'ordering':    # EscString
+  'orientation':    # GvDouble
+  'outputorder':    # EscString
+  'overlap':    # EscString
+  'overlap_scaling':    # GvDouble
+  'overlap_shrink':    # GvBool
+  'pack':    # EscString
+  'packmode':    # EscString
+  'pad':    # EscString
+  'page':    # EscString
+  'pagedir':    # EscString
+  'quadtree':    # GvBool
+  'quantum':    # GvDouble
+  'rank':    # EscString
+  'rankdir':    # EscString
+  'ranksep':    # EscString
+  'ratio':    # EscString
+  'remincross':    # GvBool
+  'repulsiveforce':    # GvDouble
+  'resolution':    # GvDouble
+  'root':    # EscString
+  'rotate':    # EscString
+  'rotation':    # GvDouble
+  'samplepoints':    # EscString
+  'scale':    # EscString
+  'searchsize':    # EscString
+  'sep':    # EscString
+  'showboxes':    # EscString
+  'size':    # EscString
+  'smoothing':    # EscString
+  'sortv':    # EscString
+  'splines':    # EscString
+  'start':    # EscString
+  'style':    # EscString
+  'stylesheet':    # EscString
+  'target':    # EscString
+  'truecolor':    # GvBool
+  'viewport':    # EscString
+  'voro_margin':    # GvDouble
+  'xdotversion':   #EscString
+
+
+
+node_style:
+  'URL':    # EscString
+  'area':    # GvDouble
+  'color':    # ColorList
+  'colorscheme':    # EscString
+  'comment':    # EscString
+  'distortion':    # GvDouble
+  'fillcolor':    # Color
+  'fixedsize':    # GvBool
+  'fontcolor':    # Color
+  'fontname':    # EscString
+  'fontsize':    # GvDouble
+  'gradientangle':    # EscString
+  'group':    # EscString
+  'height':    # GvDouble
+  'href':    # EscString
+  'id':    # EscString
+  'image':    # EscString
+  'imagescale':    # EscString
+  'label':    # LblString
+  'labelloc':    # EscString
+  'layer':    # EscString
+  'margin':    # EscString
+  'nojustify':    # GvBool
+  'ordering':    # EscString
+  'orientation':    # GvDouble
+  'penwidth':    # GvDouble
+  'peripheries':    # EscString
+  'pin':    # GvBool
+  'pos':    # SplineType
+  'rects':    # Rect
+  'regular':    # GvBool
+  'root':    # EscString
+  'shape':    # EscString
+  'shapefile':    # EscString
+  'showboxes':    # EscString
+  'sides':    # EscString
+  'size':    # EscString
+  'skew':    # GvDouble
+  'sortv':    # EscString
+  'style':    # EscString
+  'target':    # EscString
+  'tooltip':    # EscString
+  'vertices':    # EscString
+  'width':    # GvDouble
+  'xlabel':    # LblString
+  'xlp':    # EscString
+  'z':    # GvDouble
+
+
+edge_style:
+  'URL':    # EscString
+  'arrowhead':    # ArrowType
+  'arrowsize':    # GvDouble
+  'arrowtail':    # ArrowType
+  'color':    # ColorList
+  'colorscheme':    # EscString
+  'comment':    # EscString
+  'constraint':    # GvBool
+  'decorate':    # GvBool
+  'dir':    # EscString
+  'edgeURL':    # EscString
+  'edgehref':    # EscString
+  'edgetarget':    # EscString
+  'edgetooltip':    # EscString
+  'fillcolor':    # Color
+  'fontcolor':    # Color
+  'fontname':    # EscString
+  'fontsize':    # GvDouble
+  'headURL':    # EscString
+  'head_lp':    # EscString
+  'headclip':    # GvBool
+  'headhref':    # EscString
+  'headlabel':    # EscString
+  'headport':    # EscString
+  'headtarget':    # EscString
+  'headtooltip':    # EscString
+  'href':    # EscString
+  'id':    # EscString
+  'label':    # LblString
+  'labelURL':    # EscString
+  'labelangle':    # GvDouble
+  'labeldistance':    # GvDouble
+  'labelfloat':    # GvBool
+  'labelfontcolor':    # Color
+  'labelfontname':    # EscString
+  'labelfontsize':    # GvDouble
+  'labelhref':    # EscString
+  'labeltarget':    # EscString
+  'labeltooltip':    # EscString
+  'layer':    # EscString
+  'len':    # GvDouble
+  'lhead':    # EscString
+  'lp':    # EscString
+  'ltail':    # EscString
+  'minlen':    # EscString
+  'nojustify':    # GvBool
+  'penwidth':    # GvDouble
+  'pos':    # SplineType
+  'samehead':    # EscString
+  'sametail':    # EscString
+  'showboxes':    # EscString
+  'style':    # EscString
+  'tailURL':    # EscString
+  'tail_lp':    # EscString
+  'tailclip':    # GvBool
+  'tailhref':    # EscString
+  'taillabel':    # EscString
+  'tailport':    # EscString
+  'tailtarget':    # EscString
+  'tailtooltip':    # EscString
+  'target':    # EscString
+  'tooltip':    # EscString
+  'weight':    # GvDouble
+  'xlabel':    # LblString
+  'xlp':    # EscString
+
+
