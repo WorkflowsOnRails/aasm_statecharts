@@ -1,6 +1,8 @@
 require 'graphviz'
-require_relative 'transition_table'
+require 'active_record'
+require 'rails'
 
+require_relative 'transition_table'
 require_relative 'chart_renderer'
 
 # Library module than handles translating AASM state machines to statechart
@@ -29,6 +31,9 @@ module AASM_StateChart
   class AASM_StateChart_Error < StandardError
   end
 
+  class AASM_NoModels < AASM_StateChart_Error
+  end
+
   class NoAASM_Error < AASM_StateChart_Error
   end
 
@@ -38,18 +43,31 @@ module AASM_StateChart
   class BadFormat_Error < AASM_StateChart_Error
   end
 
+  class NoConfigFile_Error < AASM_StateChart_Error
+  end
+
   class BadConfigFile_Error < AASM_StateChart_Error
   end
 
   class BadOutputDir_Error < AASM_StateChart_Error
   end
 
-  class CLI
+  class NoRailsConfig_Error < AASM_StateChart_Error
+  end
 
 
-    def initialize(options)
+  class AASM_StateCharts
+
+
+    def initialize(options={})
+
+      if !(options[:all]) && options[:models].empty? # should never happen; opts parsing should catch it
+        raise_error AASM_NoModels, "You must specify a model to diagram or else use the --all option."
+      end
 
       @output_dir = get_output_dir options.fetch(:directory, '')
+
+      load_rails
 
       @models = load_models options[:all], options[:models]
 
@@ -83,7 +101,7 @@ module AASM_StateChart
 
             renderer.save(filename, format: @format)
 
-            puts " * rendered #{name} to #{filename}"
+            puts " * diagrammed #{name} and saved to #{filename}"
 
           end
 
@@ -100,20 +118,22 @@ module AASM_StateChart
 
 
     def get_output_dir options_dir
-      out_dir = options_dir == '' ? '.' : options_dir
 
-      Dir.mkdir(out_dir) unless Dir.exists? out_dir
+      default_dir = './doc'
+
+      out_dir = options_dir == '' ? default_dir : options_dir
+
+      Dir.mkdir(out_dir) unless Dir.exist? out_dir
       out_dir
     end
 
 
     #  used to get all subclasses of ActiveRecord.  Is there a way to get them without loading all of rails?
-    def load_rails!
-      unless File.exists? './config/environment.rb'
+    def load_rails
+
+      unless File.exist? './config/environment.rb'
         script_name = File.basename $PROGRAM_NAME
-        puts 'error: unable to find ./config/environment.rb.'
-        puts "Please run #{script_name} from the root of your Rails application."
-        exit(1)
+        raise NoRailsConfig_Error, "Error: unable to find ./config/environment.rb.\n Please run #{script_name} from the root of your Rails application."
       end
 
       require './config/environment'
@@ -133,8 +153,10 @@ module AASM_StateChart
 
 
     def collect_all_models
+
       Rails::Application.subclasses.first.eager_load!
       ActiveRecord::Base.descendants.select { |klass| klass.respond_to? :aasm }
+
     end
 
 
@@ -151,13 +173,18 @@ module AASM_StateChart
 
     def load_config_file config_fn
       parsed_config = {}
+
       unless config_fn == ''
-        File.open config_fn do |cf|
-          begin
-            parsed_config = Psych.safe_load(cf)
-          rescue Psych::SyntaxError => ex
-            ex.message
+        if File.exist? config_fn
+          File.open config_fn do |cf|
+            begin
+              parsed_config = Psych.safe_load(cf)
+            rescue Psych::SyntaxError => ex
+              ex.message
+            end
           end
+        else
+          raise NoConfigFile_Error, "The config file #{config_fn} doesn't exist."
         end
 
       end
@@ -169,14 +196,15 @@ module AASM_StateChart
           parsed_opts[k2] = v2
         end
       end
-      symbolize_keys parsed_opts
+      symbolize_the_keys parsed_opts
     end
 
 
     # GraphViz expects keys to be symbols, but it's only safe (and user friendly) to have
     # keys as strings in a config file
-    def symbolize_keys(hash)
-      hash.each_with_object({}) { |(k, v), h| h[k.to_sym] = v.is_a?(Hash) ? symbolize_keys(v) : v }
+    def symbolize_the_keys(hash)
+
+      hash.each_with_object({}) { |(k, v), h| h[k.to_sym] = v.is_a?(Hash) ? symbolize_the_keys(v) : v }
     end
 
 
