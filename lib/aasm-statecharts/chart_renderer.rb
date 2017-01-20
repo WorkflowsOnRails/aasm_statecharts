@@ -36,6 +36,8 @@ module AASM_StateChart
 
   class Chart_Renderer
 
+    attr :default_config
+
     @CONF = {}
 
     ENTER_CALLBACKS = [:before_enter, :enter, :after_enter, :after_commit]
@@ -46,9 +48,9 @@ module AASM_StateChart
     TRANSITION_GUARDS = [:guards, :guard, :if]
 
 
-    def initialize(klass, transition_table=false)
+    def initialize(klass, transition_table=false, config_options = {})
 
-      init_config
+      init_config config_options
 
       @start_node = nil
       @end_node = nil
@@ -59,11 +61,11 @@ module AASM_StateChart
 
       @transition_table = TransitionTable.new if transition_table
 
-      # ruby-graphviz is missing an API to set styles in bulk, so set them here
+      # ruby-graphviz is missing an API to set global styles (in bulk), so set them here
       # TODO config
       @default_config[:graph_style].each { |k, v| @graph.graph[k] = v }
-      @default_config[:node_style].each { |k, v| @graph.node[k] = v }
-      @default_config[:edge_style].each { |k, v| @graph.edge[k] = v }
+      @default_config[:node_style].each  { |k, v| @graph.node[k] = v }
+      @default_config[:edge_style].each  { |k, v| @graph.edge[k] = v }
 
 
       if !(klass.respond_to? :aasm)
@@ -91,7 +93,9 @@ module AASM_StateChart
     end
 
 
-    def save(filename, format: 'png') # TODO config default output format
+    def save(filename, format: 'png', graph_options: (@default_config[:graph_style]))
+      opts = {}
+      opts.merge!(graph_options).merge({format => filename}) # FIXME why can't I merge in graph_options? can't seem to use opts
       @graph.output({format => filename})
     end
 
@@ -156,7 +160,7 @@ module AASM_StateChart
       callbacks_list << "exit / #{exit_callbacks}" if exit_callbacks.present? # TODO config exit (should use i18n)
       label = "{#{state.display_name}|#{callbacks_list.join('\l')}}"
 
-      node = @graph.add_nodes(state.name.to_s, label: label)
+      node = @graph.add_nodes(state.name.to_s, @default_config[:node_style].merge({label: label})) # FIXME add the default options?
 
       if state.options.fetch(:initial, false)
         @graph.add_edges(start_node, node)
@@ -196,15 +200,17 @@ module AASM_StateChart
     # ----------------------
     # configuration
 
-    def init_config
+    def init_config(config_options)
 
       @default_config = load_default_config
 
-      # merge with anything set in aasm_statecharts.config file
-      config_fn = 'aasm_statecharts.yml'
+      @default_config.each do |k, v|
 
-      config_file = YAML.load(config_fn) if File.exist? config_fn
+        @default_config[k].merge! config_options[k] if config_options.has_key?(k)
+      end
 
+      # @default_config.merge! config_options
+      @default_config
     end
 
 
