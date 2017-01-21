@@ -34,7 +34,11 @@ module AASM_StateChart
 
     def initialize(options={})
 
-      get_included_paths options[:path] if options.has_key?(:path) # don't use fetch because nil is meaningful (we need to raise an error)
+      @options = options
+      puts "\n\n@options: #{@options.inspect}"
+
+      @include_paths = get_included_paths options[:path] if options.has_key?(:path) # don't use fetch because nil is meaningful (we need to raise an error)
+
 
       if !(options[:all]) && options[:models].empty? # should never happen; opts parsing should catch it
         raise_error AASM_NoModels, "You must specify a model to diagram or else use the --all option."
@@ -52,14 +56,15 @@ module AASM_StateChart
 
       @config_options = Hash.new.merge(load_config_file(options.fetch(:config_file, '')))
 
+
     end
 
 
     def run
 
       unless @models.blank?
-        @models.each do |m |
-          klass =  Module.const_get m
+        @models.each do |m|
+          klass = Module.const_get m
 
           name = klass.name.underscore
 
@@ -98,23 +103,27 @@ module AASM_StateChart
 
     def get_included_paths(options_path)
 
+      full_paths = []
       if options_path.blank?
-        raise BadPath_Error, "Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
+        raise BadPath_Error, "\n\nERROR: Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
 
       elsif (paths = options_path.split File::PATH_SEPARATOR).count == 0
-        raise BadPath_Error, "Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
+        raise BadPath_Error, "\n\nERROR: Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
       end
 
       paths.each do |path|
+        fullpath = File.absolute_path (path)
 
-        if Dir.exist? path
-          $LOAD_PATH.unshift(path) # add to the start of $LOAD_PATH
+        if Dir.exist? fullpath
+          $LOAD_PATH.unshift(fullpath) # add to the start of $LOAD_PATH
+          full_paths << fullpath
         else
-          raise PathNotLoaded, "Could not load path #{path}."
+          raise PathNotLoaded, "\n\nERROR: Could not load path #{path}."
         end
 
       end
 
+      full_paths
 
     end
 
@@ -150,11 +159,19 @@ module AASM_StateChart
 
       else
 
-        models.each do | model |
+        models.each do |model|
+          puts "\n model: #{model}\n"
           begin
             require model
           rescue
-            raise ModelNotLoaded, "Could not load #{model} ."
+            @include_paths.each do |fullpath|
+              begin
+                require_relative File.join(fullpath, model)
+              end
+              # TODO how to ignore any error raised?
+            end
+
+            raise ModelNotLoaded, "\n\nERROR: Could not load #{model} (Looked in #{@include_paths} and\n $LOAD_PATH: #{$LOAD_PATH.inspect})."
           end
 
           model_classes << model.camelize
@@ -190,7 +207,7 @@ module AASM_StateChart
       valid_formats = GraphViz::Constants::FORMATS
       unless valid_formats.include? format_extension
         valid_list = valid_formats.join ', '
-        raise BadFormat_Error, "ERROR: File format #{format_extension} is not a valid format.\n   These are the valid formats:\n  #{valid_list}"
+        raise BadFormat_Error, "\n\nERROR: File format #{format_extension} is not a valid format.\n   These are the valid formats:\n  #{valid_list}"
       end
 
       format_extension
