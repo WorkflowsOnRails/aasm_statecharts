@@ -83,6 +83,26 @@ describe AASM_StateChart::AASM_StateCharts do
             AASM_StateChart::PathNotLoaded,
             good_options.merge({path: 'does/not/exist'})
 
+
+    it 'handles a list of paths' do
+
+      rails_models_path = File.join(__dir__, '..','app','models')
+
+      # have a model in each of the included paths
+      options =  good_options.merge({path: "#{include_path}#{File::PATH_SEPARATOR}#{rails_models_path}"}).update({models: ['purchase', 'single_state']})
+
+      # will produce 2 files
+
+      AASM_StateChart::AASM_StateCharts.new(options).run
+
+      expect(File.exist?(File.join(OUT_DIR, 'single_state.png')))
+      expect(File.exist?(File.join(OUT_DIR, 'purchase.png')))
+
+      rm_specout_outfile('single_state.png')
+      rm_specout_outfile('purchase.png')
+
+    end
+
   end
 
 
@@ -248,7 +268,7 @@ describe AASM_StateChart::AASM_StateCharts do
 
   describe 'rails class' do
 
-    it 'error if it is not run under Rails config directory' do
+    it 'no error if it is not run under Rails config directory' do
       options = good_options
       # FIXME how to run this under a different dir so it can fail?
       expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error AASM_StateChart::NoRailsConfig_Error
@@ -259,7 +279,7 @@ describe AASM_StateChart::AASM_StateCharts do
 
       options = {format: 'png', models: ['purchase'], directory: OUT_DIR}
       options[:config_file] = ugly_config_fn
-      options[:path] = include_path
+      options[:path] = File.absolute_path( File.join(__dir__, '..',  'app', 'models') )
 
       AASM_StateChart::AASM_StateCharts.new(options).run
 
