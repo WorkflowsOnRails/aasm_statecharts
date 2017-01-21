@@ -21,7 +21,7 @@ end
 RSpec.shared_examples 'use doc directory' do |desc, options|
 
   it "#{desc}" do
-    doc_dir = File.absolute_path(File.join(__dir__, '..', 'doc'))
+    doc_dir = File.absolute_path(File.join(__dir__, '..', '..', 'doc'))
 
     FileUtils.rm_r(doc_dir) if Dir.exist? doc_dir
 
