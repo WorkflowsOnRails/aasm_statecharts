@@ -32,79 +32,6 @@ def rm_specout_outfile(outfile = "#{DEFAULT_MODEL}.png")
 end
 
 
-# alias shared example call for readability
-RSpec.configure do |c|
-  c.alias_it_should_behave_like_to :it_will, 'it will'
-end
-
-#- - - - - - - - - - 
-RSpec.shared_examples 'use doc directory' do |desc, options|
-
-  it "#{desc}" do
-    doc_dir = File.absolute_path(File.join(__dir__, '..', 'doc'))
-
-    FileUtils.rm_r(doc_dir) if Dir.exist? doc_dir
-
-    expect { AASM_StateChart::AASM_StateCharts.new(options).run }.not_to raise_error
-    expect(Dir).to exist(doc_dir)
-    expect(File).to exist(File.join(doc_dir, "#{DEFAULT_MODEL}.png"))
-
-    FileUtils.rm_r(doc_dir)
-  end
-
-end
-
-
-RSpec.shared_examples 'have attributes = given config' do |item_name, item, options={}|
-
-  item_attribs = item.each_attribute(true) { |a| a }
-
-  options.each do |k, v|
-    # GraphViz returns the keys as strings
-    it "#{item_name} #{k.to_s}" do
-      expect(item_attribs.fetch(k.to_s, nil)).not_to be_nil # will be something like a GraphViz::Types::EscString
-      expect(item_attribs.fetch(k.to_s, '').to_s).to eq("\"#{v}\"") #('"Courier New"')
-    end
-
-  end
-
-end
-
-
-RSpec.shared_examples 'have graph attributes = given config' do |item, options={}|
-
-  item_attribs = item.each_attribute { |a| a }
-
-  options.each do |k, v|
-
-    # GraphViz returns the keys as strings
-
-    it "graph #{k.to_s}" do
-
-      expect(item_attribs.fetch(k.to_s, nil)).not_to be_nil # will be something like a GraphViz::Types::EscString
-      expect(item_attribs.fetch(k.to_s, '').to_s).to eq("\"#{v}\"") #('"Courier New"')
-
-    end
-
-  end
-
-end
-
-
-RSpec.shared_examples 'raise error' do |desc, error, options|
-  it desc do
-    expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error(error)
-  end
-end
-
-
-RSpec.shared_examples 'not raise an error' do |desc, options|
-  it desc do
-    expect { AASM_StateChart::AASM_StateCharts.new(options).run }.not_to raise_error
-  end
-end
-
-
 #- - - - - - - - - - 
 
 def config_from(fn)
@@ -163,10 +90,22 @@ describe AASM_StateChart::AASM_StateCharts do
     options = good_options
 
 
-    it 'error if both --all and a model is given' do
-      pending # FIXME
+    it 'give a root class' do
+      pending
+      good_options.update({root_class: ['single_state']}).merge({path: include_path})
     end
 
+
+    it "give a root class and don't include it flag" do
+      pending
+      good_options.update({root_class: ['single_state']}).merge({path: include_path}).merge({dont_include_root: true})
+    end
+
+    it "just warns if no root class and don't include it flag" do
+      pending
+      # warn that don't include root flag is meaningless without a root class
+
+    end
 
     it_will 'raise error', 'model cannot be loaded',
             LoadError,
@@ -190,18 +129,12 @@ describe AASM_StateChart::AASM_StateCharts do
     it_will 'not raise an error', 'load a list of valid classes',
             good_options.update({models: ['single_state', 'many_states']}).merge({path: include_path})
 
-
-    it_will 'not raise an error', 'load github',
-            good_options.update({models: ['git_hub']}).merge({path: include_path})
-
-
-    it_will 'not raise an error', 'load pivotal_tracker_feature',
-            good_options.update({models: ['pivotal_tracker_feature']}).merge({path: include_path})
-
-
     it_will 'raise error', 'one bad class in a list',
             LoadError,
             good_options.update({models: ['single_state', 'blorf']}).merge({path: include_path})
+
+    it_will 'not raise an error', "model isn't ActiveRecord::Base subclass",
+            good_options.update({models: ['not_rails_subclass_two_simple_states']}).merge({path: include_path})
 
 
   end
