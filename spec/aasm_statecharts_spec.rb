@@ -76,20 +76,20 @@ describe AASM_StateChart::AASM_StateCharts do
             good_options.merge({path: nil})
 
     it_will 'raise error', 'ill-formed path',
-            AASM_StateChart::PathNotLoaded,
+            AASM_StateChart::PathNotLoaded_Error,
             good_options.merge({path: 'blorfy, blorf, blorf? blorf! @blorf'})
 
     it_will 'raise error', 'path dir does not exist',
-            AASM_StateChart::PathNotLoaded,
+            AASM_StateChart::PathNotLoaded_Error,
             good_options.merge({path: 'does/not/exist'})
 
 
     it 'handles a list of paths' do
 
-      rails_models_path = File.join(__dir__, '..','app','models')
+      rails_models_path = File.join(__dir__, '..', 'app', 'models')
 
       # have a model in each of the included paths
-      options =  good_options.merge({path: "#{include_path}#{File::PATH_SEPARATOR}#{rails_models_path}"}).update({models: ['purchase', 'single_state']})
+      options = good_options.merge({path: "#{include_path}#{File::PATH_SEPARATOR}#{rails_models_path}"}).update({models: ['purchase', 'single_state']})
 
       # will produce 2 files
 
@@ -106,26 +106,47 @@ describe AASM_StateChart::AASM_StateCharts do
   end
 
 
-  describe 'checks model classes' do
+  describe 'print out attributes for config files' do
+
+    it 'graph attributes and options' do
+      pending
+    end
+
+    it 'node attributes and options' do
+      pending
+    end
+
+    it 'edge attributes and options' do
+      pending
+    end
+
+  end
+
+
+  describe 'root and subclass-root' do
     options = good_options
 
 
     it 'give a root class' do
       pending
-      good_options.update({root_class: ['single_state']}).merge({path: include_path})
+      good_options.merge({root_class: ['single_state']}).merge({path: include_path})
     end
 
 
-    it "give a root class and don't include it flag" do
+    it "give a subclass-root class" do
       pending
-      good_options.update({root_class: ['single_state']}).merge({path: include_path}).merge({dont_include_root: true})
+      good_options.merge({subclass_root_model: ['single_state']}).merge({path: include_path})
     end
 
-    it "just warns if no root class and don't include it flag" do
-      pending
-      # warn that don't include root flag is meaningless without a root class
+    it_will 'raise error', 'cannot have same model for root and subclass-root',
+            AASM_StateChart::RootAndSubclassSame_Error,
+            good_options.merge({root_class: ['single_state']}).merge({subclass_root_model: ['single_state']}).merge({path: include_path})
 
-    end
+
+  end
+
+  describe 'checks model classes' do
+
 
     it_will 'raise error', 'model cannot be loaded',
             LoadError,
@@ -279,7 +300,7 @@ describe AASM_StateChart::AASM_StateCharts do
 
       options = {format: 'png', models: ['purchase'], directory: OUT_DIR}
       options[:config_file] = ugly_config_fn
-      options[:path] = File.absolute_path( File.join(__dir__, '..',  'app', 'models') )
+      options[:path] = File.absolute_path(File.join(__dir__, '..', 'app', 'models'))
 
       AASM_StateChart::AASM_StateCharts.new(options).run
 
