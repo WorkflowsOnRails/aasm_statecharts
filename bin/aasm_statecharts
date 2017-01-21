@@ -3,13 +3,14 @@
 require 'optionparser'
 require 'graphviz/constants'
 
-require_relative File.join(__dir__, '..','lib','aasm_statecharts')
+require_relative File.join(__dir__, '..', 'lib', 'aasm_statecharts')
 
 
 options = {
     all: false,
     format: 'png',
-    directory: './doc'
+    directory: './doc',
+    models: []
 }
 
 formats = GraphViz::Constants::FORMATS.join(', ')
@@ -24,6 +25,10 @@ parser = OptionParser.new do |opts|
 
   opts.on('-a', '--all', 'Render all ActiveRecord models using AASM') do
     options[:all] = true
+  end
+
+  opts.on( '-i', '--include PATH', "Include the path in the load path.\n PATH can have multiple directories, separated by your OS separator #{File::PATH_SEPARATOR}" ) do |path|
+    options[:path] = path
   end
 
   opts.on('-d', '--directory DIRECTORY',
@@ -64,9 +69,9 @@ if !options[:all] && ARGV.empty?
   exit(1)
 end
 
-options[:directory] =  './doc' unless options.has_key? :directory  # not needed
+options[:directory] = './doc' unless options.has_key? :directory # not needed
 
-unless File.exist?(options[:config_file])
+if options.has_key?(:config_file) && !File.exist?(options[:config_file])
   puts "\n Error:  The configuration file #{options[:config_file]} cannot be found.\n\n"
   exit(2)
 end
@@ -75,5 +80,6 @@ ARGV.each do |model|
   options[:models] << model
 end
 
+puts options.inspect
 
 AASM_StateChart::AASM_StateCharts.new(options).run

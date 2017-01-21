@@ -28,38 +28,13 @@ require_relative 'chart_renderer'
 
 module AASM_StateChart
 
-  class AASM_StateChart_Error < StandardError
-  end
-
-  class AASM_NoModels < AASM_StateChart_Error
-  end
-
-  class NoAASM_Error < AASM_StateChart_Error
-  end
-
-  class NoStates_Error < AASM_StateChart_Error
-  end
-
-  class BadFormat_Error < AASM_StateChart_Error
-  end
-
-  class NoConfigFile_Error < AASM_StateChart_Error
-  end
-
-  class BadConfigFile_Error < AASM_StateChart_Error
-  end
-
-  class BadOutputDir_Error < AASM_StateChart_Error
-  end
-
-  class NoRailsConfig_Error < AASM_StateChart_Error
-  end
-
 
   class AASM_StateCharts
 
 
     def initialize(options={})
+
+      get_included_paths options[:path] if options.has_key?(:path) # don't use fetch because nil is meaningful (we need to raise an error)
 
       if !(options[:all]) && options[:models].empty? # should never happen; opts parsing should catch it
         raise_error AASM_NoModels, "You must specify a model to diagram or else use the --all option."
@@ -67,9 +42,9 @@ module AASM_StateChart
 
       @output_dir = get_output_dir options.fetch(:directory, '')
 
-      load_rails
+      #load_rails
 
-      @models = load_models options[:all], options[:models]
+      @models = get_models options[:all], options[:models]
 
       @show_transition_table = options[:transition_table]
 
@@ -82,31 +57,35 @@ module AASM_StateChart
 
     def run
 
-      @models.each do |klass|
+      unless @models.blank?
+        @models.each do |m |
+          klass =  Module.const_get m
 
-        name = klass.name.underscore
+          name = klass.name.underscore
 
-        if !(klass.respond_to? :aasm)
-          raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
+          if !(klass.respond_to? :aasm)
+            raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
 
-        else
-
-          if klass.aasm.states.empty?
-            raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
           else
 
-            renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table, @config_options)
+            if klass.aasm.states.empty?
+              raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
+            else
 
-            filename = File.join(@output_dir, "#{name}.#{@format}")
+              renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table, @config_options)
 
-            renderer.save(filename, format: @format)
+              filename = File.join(@output_dir, "#{name}.#{@format}")
 
-            puts " * diagrammed #{name} and saved to #{filename}"
+              renderer.save(filename, format: @format)
+
+              puts " * diagrammed #{name} and saved to #{filename}"
+
+            end
 
           end
 
-        end
 
+        end
 
       end
 
@@ -117,7 +96,30 @@ module AASM_StateChart
     private
 
 
-    def get_output_dir options_dir
+    def get_included_paths(options_path)
+
+      if options_path.blank?
+        raise BadPath_Error, "Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
+
+      elsif (paths = options_path.split File::PATH_SEPARATOR).count == 0
+        raise BadPath_Error, "Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
+      end
+
+      paths.each do |path|
+
+        if Dir.exist? path
+          $LOAD_PATH.unshift(path) # add to the start of $LOAD_PATH
+        else
+          raise PathNotLoaded, "Could not load path #{path}."
+        end
+
+      end
+
+
+    end
+
+
+    def get_output_dir(options_dir)
 
       default_dir = './doc'
 
@@ -137,6 +139,30 @@ module AASM_StateChart
       end
 
       require './config/environment'
+    end
+
+
+    def get_models(all_option, models)
+
+      model_classes = []
+      # TODO not going to worry about the all_option right now
+      if all_option
+
+      else
+
+        models.each do | model |
+          begin
+            require model
+          rescue
+            raise ModelNotLoaded, "Could not load #{model} ."
+          end
+
+          model_classes << model.camelize
+        end
+      end
+
+      model_classes
+
     end
 
 
@@ -160,7 +186,7 @@ module AASM_StateChart
     end
 
 
-    def verify_file_format format_extension
+    def verify_file_format (format_extension)
       valid_formats = GraphViz::Constants::FORMATS
       unless valid_formats.include? format_extension
         valid_list = valid_formats.join ', '
@@ -171,7 +197,7 @@ module AASM_StateChart
     end
 
 
-    def load_config_file config_fn
+    def load_config_file (config_fn)
       parsed_config = {}
 
       unless config_fn == ''
@@ -208,6 +234,6 @@ module AASM_StateChart
     end
 
 
-  end
+  end #class
 
-end
+end # module
