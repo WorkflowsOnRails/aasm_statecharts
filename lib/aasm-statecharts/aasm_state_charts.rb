@@ -45,6 +45,8 @@ module AASM_StateChart
       end
 
       @output_dir = get_output_dir options.fetch(:directory, '')
+      puts "\n\n@output_dir: #{@output_dir}"
+
 
       #load_rails
 
@@ -130,7 +132,7 @@ module AASM_StateChart
 
     def get_output_dir(options_dir)
 
-      default_dir = './doc'
+      default_dir =  'doc'  #'./doc'
 
       out_dir = options_dir == '' ? default_dir : options_dir
 
