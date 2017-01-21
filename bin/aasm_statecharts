@@ -23,9 +23,6 @@ parser = OptionParser.new do |opts|
     exit(0)
   end
 
-  opts.on('-a', '--all', 'Render all ActiveRecord models using AASM') do
-    options[:all] = true
-  end
 
   opts.on( '-i', '--include PATH', "Include the path in the load path.\n PATH can have multiple directories, separated by your OS separator #{File::PATH_SEPARATOR}" ) do |path|
     options[:path] = path
