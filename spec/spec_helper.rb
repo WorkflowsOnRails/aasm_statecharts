@@ -9,7 +9,9 @@ require 'rspec'
 require 'aasm'
 require 'active_record'
 
-require_relative '../lib/aasm_statecharts'
+
+require File.absolute_path(File.join(__dir__, '..', 'lib','aasm_statecharts.rb'))
+
 
 Dir[File.join(__dir__, 'fixtures','*.rb')].each { |file| require file }
 
