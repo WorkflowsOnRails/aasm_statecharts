@@ -32,10 +32,13 @@ module AASM_StateChart
   class BadPath_Error < AASM_StateChart_Error
   end
 
-  class PathNotLoaded < AASM_StateChart_Error
+  class PathNotLoaded_Error < AASM_StateChart_Error
   end
 
-  class ModelNotLoaded < AASM_StateChart_Error
+  class ModelNotLoaded_Error < AASM_StateChart_Error
+  end
+
+  class RootAndSubclassSame_Error < AASM_StateChart_Error
   end
 
 end # module
