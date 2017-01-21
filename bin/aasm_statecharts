@@ -5,78 +5,158 @@ require 'graphviz/constants'
 
 require_relative File.join(__dir__, '..', 'lib', 'aasm_statecharts')
 
+module AASM_StateChart
 
-options = {
-    all: false,
-    format: 'png',
-    directory: './doc',
-    models: []
-}
-
-formats = GraphViz::Constants::FORMATS.join(', ')
-
-parser = OptionParser.new do |opts|
-  opts.banner = "Usage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
-
-  opts.on_tail('-v', '--version', 'version of this gem') do
-    puts AASM_StateChart::VERSION
-    exit(0)
+  class CLI_Inputs_ERROR < StandardError
   end
 
 
-  opts.on( '-i', '--include PATH', "Include the path in the load path.\n PATH can have multiple directories, separated by your OS separator #{File::PATH_SEPARATOR}" ) do |path|
-    options[:path] = path
-  end
+  class AASM_Statecharts_CLI
 
-  opts.on('-d', '--directory DIRECTORY',
-          "Output to a specific directory (default: #{options[:directory]})") do |directory|
-    options[:directory] = directory
-  end
 
-  opts.on('-c', '--config FILE', 'Use the config file named FILE') do |config_file|
-    options[:config_file] = config_file
-  end
+    def initialize(argv)
 
-  opts.on('-t', '--table', 'Create a state transition table') do
-    options[:transition_table] = true
-  end
+      @out = ''
 
-  opts.on('-f', '--file-type TYPE',
-          "Output in the specified format (default: #{options[:format]}), which must be one of the following: #{formats}.") do |format|
-    format = format.downcase
+      @options = {
+          all: false,
+          format: 'png',
+          directory: './doc',
+          models: []
+      }
 
-    unless AASM_StateChart::Chart_Renderer::FORMATS.include?(format)
-      puts "error: #{format} is not a recognized file format."
-      puts "The file format must be one of the following: #{formats}."
-      exit(1)
+      @formats = GraphViz::Constants::FORMATS.join(', ')
+
+      @parser = init_parser
+
+      puts "\nARGS: #{argv}\n"
+
+      process argv
+
+      @out
+
     end
 
-    options[:format] = format
+
+    def option_subinfo_ok?(option, info)
+      case option
+        when :dump_configs then
+          if info.downcase == ('graph' || 'nodes' || 'edges' || '')
+            [true, '']
+          else
+            [false, "Invalid choice.  Please enter 'graph', 'nodes', 'edges', or leave blank to show all."]
+          end
+
+        else
+          [true, '']
+      end
+    end
+
+
+    # - - - - - - - -
+    private
+
+
+    def init_parser
+
+      OptionParser.new do |opts|
+        opts.banner = "Usage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
+
+        opts.on_tail('-v', '--version', 'version of this gem') do
+          @options[:version] = true
+          puts AASM_StateChart::VERSION
+          exit(0)
+        end
+
+        opts.on('-r', '--root ROOT_MODEL', "Generate diagrams for this ROOT_MODEL and all of its subclasses. (The ROOT_MODEL is also diagrammed.)") do |root_model|
+          @options[:root_model] = root_model
+        end
+
+        opts.on('-s', '--subclass-root ROOT_MODEL', "Generate diagrams for all of the subclasses of this ROOT_MODEL. (The ROOT_MODEL is not diagrammed.") do |subclass_root_model|
+          @options[:subclass_root_model] = subclass_root_model
+        end
+
+        opts.on('-i', '--include PATH', "Include the path in the load path.\n PATH can have multiple directories, separated by your OS separator #{File::PATH_SEPARATOR}") do |path|
+          @options[:path] = path
+        end
+
+        opts.on('-d', '--directory DIRECTORY',
+                "Output to a specific directory (default: #{@options[:directory]})") do |directory|
+          @options[:directory] = directory
+        end
+
+        opts.on('-c', '--config FILE', 'Use the config file named FILE') do |config_file|
+          @options[:config_file] = config_file
+        end
+
+        opts.on('-t', '--table', 'Create a state transition table') do
+          @options[:transition_table] = true
+        end
+
+        opts.on('-f', '--file-type TYPE',
+                "Output in the specified format (default: #{@options[:format]}), which must be one of the following: #{@formats}.") do |format|
+          format_d = format.downcase
+
+          unless AASM_StateChart::Chart_Renderer::FORMATS.include?(format_d)
+            puts "ERROR: #{format} is not a recognized file format."
+            puts "The file format must be one of the following: #{@formats}."
+            exit(1)
+          end
+
+          @options[:format] = format_d
+        end
+
+        opts.on('-g', '--graph-configs [graph | nodes | edges ]',
+                "Show all of the configuration options (from graphViz). (No model is needed.) Or specify [graph | nodes | edges] to show the options for just that thing.\n  If no option is specified, all options are shown.No model is needed") do |graph_config|
+
+          if graph_config.nil?
+            @options[:dump_configs] = :all
+          else
+            opt_check = option_subinfo_ok?(:dump_configs, graph_config)
+            opt_check.first ? @options[:dump_configs] = graph_config.to_sym : puts("ERROR: #{opt_check[2]}")
+          end
+        end
+
+        opts
+      end
+
+    end
+
+
+    def check_options
+
+      if !@options[:all] && ARGV.empty? && !(@options.fetch(:dump_configs, false) || @options.fetch(:version, false))
+        raise CLI_Inputs_ERROR, "\n Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n #{parser}"
+      end
+
+      @options[:directory] = './doc' unless @options.has_key? :directory # not needed
+
+      if @options.has_key?(:config_file) && !File.exist?(@options[:config_file])
+        raise CLI_Inputs_ERROR, "\n Error:  The configuration file #{@options[:config_file]} cannot be found.\n\n"
+      end
+
+    end
+
+
+    def process(args)
+
+      @parser.parse! args
+
+      check_options
+
+      args.each do |model|
+        @options[:models] << model
+      end
+
+      puts @options.inspect
+
+      AASM_StateChart::AASM_StateCharts.new(@options).run
+
+    end
+
+
   end
 
-  opts
 end
 
-parser.parse!
-
-
-if !options[:all] && ARGV.empty?
-  puts "\n Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n"
-  puts parser
-  exit(1)
-end
-
-options[:directory] = './doc' unless options.has_key? :directory # not needed
-
-if options.has_key?(:config_file) && !File.exist?(options[:config_file])
-  puts "\n Error:  The configuration file #{options[:config_file]} cannot be found.\n\n"
-  exit(2)
-end
-
-ARGV.each do |model|
-  options[:models] << model
-end
-
-puts options.inspect
-
-AASM_StateChart::AASM_StateCharts.new(options).run
+#AASM_StateChart::AASM_Statecharts_CLI.new $*
