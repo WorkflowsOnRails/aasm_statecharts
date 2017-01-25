@@ -107,18 +107,50 @@ describe AASM_StateChart::AASM_StateCharts do
 
 
   describe 'print out attributes for config files' do
+    options = good_options
 
     it 'graph attributes and options' do
-      pending
+      options = good_options.merge({dump_configs: :graph}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
     end
 
     it 'node attributes and options' do
-      pending
+      options = good_options.merge({dump_configs: :nodes}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
+
     end
 
     it 'edge attributes and options' do
-      pending
+      options = good_options.merge({dump_configs: :edges}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
     end
+
+    it 'color attributes' do
+      options = good_options.merge({dump_configs: :colors}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
+    end
+
+    it':formats' do
+      options = good_options.merge({dump_configs: :formats}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
+    end
+
+    it':graphtype,' do
+      options = good_options.merge({dump_configs: :programs}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
+    end
+
+    it':graphtype,' do
+      options = good_options.merge({dump_configs: :graphtype}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
+    end
+
+    it 'all attributes' do
+      options = good_options.merge({dump_configs: :all}).update({models: []})
+      AASM_StateChart::AASM_StateCharts.new(options).run
+    end
+
+
 
   end
 
@@ -141,41 +173,6 @@ describe AASM_StateChart::AASM_StateCharts do
     it_will 'raise error', 'cannot have same model for root and subclass-root',
             AASM_StateChart::RootAndSubclassSame_Error,
             good_options.merge({root_class: ['single_state']}).merge({subclass_root_model: ['single_state']}).merge({path: include_path})
-
-
-  end
-
-  describe 'checks model classes' do
-
-
-    it_will 'raise error', 'model cannot be loaded',
-            LoadError,
-            good_options.update({models: ['blorfy']}).merge({path: include_path})
-
-
-    it_will 'raise error', 'warns when given a class that does not have aasm included',
-            AASM_StateChart::NoAASM_Error,
-            good_options.update({models: ['no_aasm']}).merge({path: include_path})
-
-    it_will 'raise error', 'warns when given a class that has no states defined',
-            AASM_StateChart::NoStates_Error,
-            good_options.update({models: ['empty_aasm']}).merge({path: include_path})
-
-
-    it_will 'raise error', 'fails if an invalid file format is given',
-            AASM_StateChart::BadFormat_Error,
-            good_options.update({models: ['single_state'], format: 'blorf'}).merge({path: include_path})
-
-
-    it_will 'not raise an error', 'load a list of valid classes',
-            good_options.update({models: ['single_state', 'many_states']}).merge({path: include_path})
-
-    it_will 'raise error', 'one bad class in a list',
-            LoadError,
-            good_options.update({models: ['single_state', 'blorf']}).merge({path: include_path})
-
-    it_will 'not raise an error', "model isn't ActiveRecord::Base subclass",
-            good_options.update({models: ['not_rails_subclass_two_simple_states']}).merge({path: include_path})
 
 
   end
@@ -206,7 +203,7 @@ describe AASM_StateChart::AASM_StateCharts do
   end
 
 
-  describe 'configuration' do
+  describe 'configuration file' do
     after(:each) { rm_specout_outfile }
 
     options = good_options
@@ -284,6 +281,41 @@ describe AASM_StateChart::AASM_StateCharts do
 
       rm_specout_outfile "#{options[:models].first}.#{options[:format]}"
     end
+
+  end
+
+  describe 'checks model classes' do
+
+
+    it_will 'raise error', 'model cannot be loaded',
+            LoadError,
+            good_options.update({models: ['blorfy']}).merge({path: include_path})
+
+
+    it_will 'raise error', 'warns when given a class that does not have aasm included',
+            AASM_StateChart::NoAASM_Error,
+            good_options.update({models: ['no_aasm']}).merge({path: include_path})
+
+    it_will 'raise error', 'warns when given a class that has no states defined',
+            AASM_StateChart::NoStates_Error,
+            good_options.update({models: ['empty_aasm']}).merge({path: include_path})
+
+
+    it_will 'raise error', 'fails if an invalid file format is given',
+            AASM_StateChart::BadFormat_Error,
+            good_options.update({models: ['single_state'], format: 'blorf'}).merge({path: include_path})
+
+
+    it_will 'not raise an error', 'load a list of valid classes',
+            good_options.update({models: ['single_state', 'many_states']}).merge({path: include_path})
+
+    it_will 'raise error', 'one bad class in a list',
+            LoadError,
+            good_options.update({models: ['single_state', 'blorf']}).merge({path: include_path})
+
+    it_will 'not raise an error', "model isn't ActiveRecord::Base subclass",
+            good_options.update({models: ['not_rails_subclass_two_simple_states']}).merge({path: include_path})
+
 
   end
 
