@@ -34,7 +34,6 @@ RSpec.shared_examples 'it has this many nodes' do |renderer, num_nodes|
 end
 
 
-
 describe AASM_StateChart::Chart_Renderer do
   include SpecHelper
 
@@ -105,16 +104,17 @@ describe AASM_StateChart::Chart_Renderer do
 
     describe 'guards' do
       it 'finds a single guard: :item' do
-
+        pending
       end
 
       it 'finds an array of guards: [:g1, :g2]' do
-
+        pending
       end
 
       it 'finds guards using if: if_condition' do
-
+        pending
       end
+
     end
 
     describe 'method callbacks' do
