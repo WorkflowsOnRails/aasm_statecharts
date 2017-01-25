@@ -5,6 +5,8 @@ require 'rails'
 require_relative 'transition_table'
 require_relative 'chart_renderer'
 
+require 'pp'
+
 # Library module than handles translating AASM state machines to statechart
 # diagrams.
 #
@@ -28,8 +30,19 @@ require_relative 'chart_renderer'
 
 module AASM_StateChart
 
+  # TODO title and subtitle: use HtmlString
 
   class AASM_StateCharts
+
+    ALL_ATTRIBS_TITLE = 'All attribute groups'
+    GRAPH_ATTRIBS_TITLE = 'Graph attributes:'
+    NODE_ATTRIBS_TITLE = 'Node attributes:'
+    GV_TYPES_ATTRIBS_TITLE = 'GraphViz types:'
+    EDGE_ATTRIBS_TITLE = 'Edge attributes:'
+    COLORS_ATTRIBS_TITLE = 'Colors:'
+    PROGRAMS_ATTRIBS_TITLE = 'Programs:'
+    GRAPHTYPE_ATTRIBS_TITLE = 'Graph Types:'
+    FORMAT_ATTRIBS_TITLE = 'File Formats:'
 
 
     def initialize(options={})
@@ -40,13 +53,12 @@ module AASM_StateChart
       @include_paths = get_included_paths options[:path] if options.has_key?(:path) # don't use fetch because nil is meaningful (we need to raise an error)
 
 
-      if !(options[:all]) && options[:models].empty? # should never happen; opts parsing should catch it
+      if options[:models].empty? && !options[:dump_configs] && !options[:all]
+      #if !options[:all] && options[:models].empty?  # should never happen; opts parsing should catch it
         raise_error AASM_NoModels, "You must specify a model to diagram or else use the --all option."
       end
 
       @output_dir = get_output_dir options.fetch(:directory, '')
-      puts "\n\n@output_dir: #{@output_dir}"
-
 
       #load_rails
 
@@ -63,6 +75,11 @@ module AASM_StateChart
 
 
     def run
+
+      if @options.fetch(:dump_configs, false)
+        dump_attribs @options[:dump_configs]
+      end
+
 
       unless @models.blank?
         @models.each do |m|
@@ -102,6 +119,87 @@ module AASM_StateChart
     # - - - - - - - -
     private
 
+    def dump_attribs(option)
+
+      gv_colors = {'named colors': GraphViz::Utils::Colors::COLORS}
+      gv_formats = {'output file formats': GraphViz::Constants::FORMATS}
+      gv_programs = {'programs to process dot file': GraphViz::Constants::PROGRAMS}
+      gv_graphtype = {'graph types': GraphViz::Constants::GRAPHTYPE}
+
+      # @url http://www.graphviz.org/content/arrow-shapes
+      gv_arrowshapes = {'Shapes': ['box', 'crow', 'curve', 'icurve', 'diamond', 'dot', 'inv', 'none', 'normal', 'tee', 'vee'],
+                        'modifiers': ['o', 'l', 'r']}
+
+      # @url http://www.graphviz.org/content/color-names
+      gv_color_schemes = {}
+
+      # TODO friendlize: put into the format for config.yml.  Explain the keys and some values
+
+      # node shapes and info @url http://www.graphviz.org/content/node-shapes
+
+      gv_types_info = {
+          EscString: 'a string',
+          GvDouble: 'decimal point number (double)',
+          GvBool: 'boolean (true or false)',
+          Color: "one of the accepted color names, or the hex code WITHOUT the '#'",
+          ArrowType: "one of the arrow shapes with optional modifiers",
+          Rect: "???",
+          SplineType: "???",
+          LblString: "??? label string?  <gv>STRING</gv>",
+          HtmlString: " a string surrounded by '<' and '>' (prepended with '<' and appended with '>')"
+      }
+
+
+      config_hash = case option
+
+                      when :all
+                        title_with_hash ALL_ATTRIBS_TITLE,
+                                        graphviz_options_for(/G|S|X/)
+                                            .merge(graphviz_options_for(/N/))
+                                            .merge(graphviz_options_for(/E/))
+                                            .merge(gv_colors)
+                                            .merge({'Formats': gv_formats})
+                                            .merge({'Programs': gv_programs})
+                                            .merge({'Graph Types': gv_graphtype})
+
+                      when :graph
+                        title_with_hash GRAPH_ATTRIBS_TITLE, graphviz_options_for(/G|S|X/)
+
+                      when :nodes
+                        title_with_hash NODE_ATTRIBS_TITLE, graphviz_options_for(/N/)
+
+                      when :edges
+                        title_with_hash EDGE_ATTRIBS_TITLE, graphviz_options_for(/E/)
+
+                      when :colors
+                        title_with_hash COLORS_ATTRIBS_TITLE, gv_colors
+
+                      when :formats
+                        title_with_hash FORMAT_ATTRIBS_TITLE, gv_formats # Array
+
+                      when :programs
+                        title_with_hash PROGRAMS_ATTRIBS_TITLE, gv_programs # Array
+
+                      when :graphtype
+                        title_with_hash GRAPHTYPE_ATTRIBS_TITLE, gv_graphtype # Array
+                      else
+                        {}
+                    end
+
+      puts config_hash.pretty_inspect
+      config_hash
+    end
+
+
+    def graphviz_options_for(regex)
+      GraphViz::Constants::getAttrsFor(regex)
+    end
+
+
+    def title_with_hash(title, hash)
+      {'Title': title, 'values': hash}
+    end
+
 
     def get_included_paths(options_path)
 
@@ -120,7 +218,7 @@ module AASM_StateChart
           $LOAD_PATH.unshift(fullpath) # add to the start of $LOAD_PATH
           full_paths << fullpath
         else
-          raise PathNotLoaded, "\n\nERROR: Could not load path #{path}."
+          raise PathNotLoaded_Error, "\n\nERROR: Could not load path #{path}."
         end
 
       end
@@ -132,7 +230,7 @@ module AASM_StateChart
 
     def get_output_dir(options_dir)
 
-      default_dir =  'doc'  #'./doc'
+      default_dir = 'doc' #'./doc'
 
       out_dir = options_dir == '' ? default_dir : options_dir
 
@@ -173,7 +271,7 @@ module AASM_StateChart
               # TODO how to ignore any error raised?
             end
 
-            raise ModelNotLoaded, "\n\nERROR: Could not load #{model} (Looked in #{@include_paths} and\n $LOAD_PATH: #{$LOAD_PATH.inspect})."
+            raise ModelNotLoaded_Error, "\n\nERROR: Could not load #{model} (Looked in #{@include_paths} and\n $LOAD_PATH: #{$LOAD_PATH.inspect})."
           end
 
           model_classes << model.camelize

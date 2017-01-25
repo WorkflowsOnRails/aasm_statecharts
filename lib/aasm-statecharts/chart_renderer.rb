@@ -36,6 +36,8 @@ module AASM_StateChart
 
   class Chart_Renderer
 
+    FORMATS =  GraphViz::Constants::FORMATS
+
     attr :default_config
 
     @CONF = {}
@@ -216,7 +218,7 @@ module AASM_StateChart
 
     def load_default_config
       {
-          formats: GraphViz::Constants::FORMATS,
+          formats: FORMATS,
 
           graph_style: {
               rankdir: :TB,
