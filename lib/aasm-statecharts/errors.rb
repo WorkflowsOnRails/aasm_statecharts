@@ -5,6 +5,10 @@ module AASM_StateChart
   class AASM_StateChart_Error < StandardError
   end
 
+  class CLI_Inputs_ERROR < AASM_StateChart_Error
+  end
+
+
   class AASM_NoModels < AASM_StateChart_Error
   end
 
