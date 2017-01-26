@@ -248,7 +248,7 @@ module AASM_StateChart
 
         opts
       end
-          .parse! args
+      .parse! args
 
 
       # parse! will remove all of the arguments and option it successfully parses
@@ -280,6 +280,8 @@ module AASM_StateChart
   end
 
 end
+
+# /Users/ashleyengelund/github/AV--shf-project/app/models/membership_application.rb
 
 AASM_StateChart::AASM_Statecharts_CLI.new($*)
 

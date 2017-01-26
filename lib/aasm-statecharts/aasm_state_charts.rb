@@ -64,7 +64,8 @@ module AASM_StateChart
 
       @output_dir = get_output_dir options.fetch(:directory, '')
 
-      #load_rails
+      rails_needed = true
+      load_rails  if rails_needed
 
       @models = get_models options[:all], options[:models]
 
@@ -221,7 +222,7 @@ module AASM_StateChart
       end
 
       paths.each do |path|
-        fullpath = File.absolute_path (path)
+        fullpath = File.expand_path(path)
 
         if Dir.exist? fullpath
           $LOAD_PATH.unshift(fullpath) # add to the start of $LOAD_PATH
@@ -260,10 +261,10 @@ module AASM_StateChart
     end
 
 
-    def try_requires(method, filename)
+    def try_requires(method, model)
       success = false
       begin
-        Kernel.send method, filename
+        Kernel.send method, model
         success = true
       rescue => e
         # no op
@@ -284,40 +285,42 @@ module AASM_StateChart
 
           found_model = false
 
-          try_methods = [:require, :require_relative]
-          i = 0
-          while !found_model && i < try_methods.size do
-            begin
-              found_model = try_requires(try_methods[i], model)
-            ensure
-              i += 1
-            end
-          end
+          fname = "#{model}.rb"
 
-          unless found_model
-            begin
-              load fname
-              found_model = true
-            rescue
-              found_model = false
-            end
-          end
+          found_model = require_or_load(model, fname)
 
 
           unless found_model
             # TODO - don't continue to iterate if it's found
             @include_paths.each do |fullpath|
 
-              fname = "#{model}.rb"
+              found_model = require_or_load(model, File.join(fullpath, fname) )
 
+=begin
               if File.exist?(File.join(fullpath, fname))
+
+                # found the file, but if we error out, it's because we couldn't require or load it
+
                 begin
                   require_relative File.join(fullpath, model)
                   found_model = true
                 rescue
-                      #no op
+                  #no op
+                  puts "could not require_relative #{File.join(fullpath, model)}"
                 end
+
+                unless found_model
+                  begin
+                    load File.join(fullpath, fname)
+                    found_model = true
+                  rescue
+                    # no op
+                    puts "could not load #{File.join(fullpath, fname)}"
+                  end
+                end
+
               end
+=end
 
             end
           end
@@ -339,6 +342,44 @@ module AASM_StateChart
 
       model_classes
 
+    end
+
+
+    def require_or_load(model, fname)
+
+      found_model = false
+
+      if File.exist? fname
+
+        try_methods = [:require, :require_relative]
+
+        i = 0
+
+        while !found_model && i < try_methods.size do
+
+          begin
+            found_model = try_requires(try_methods[i], model)
+          rescue => e
+            # no op
+            puts "rescued #{try_methods[i]} #{model}"
+          ensure
+            i += 1
+          end
+
+        end
+
+        unless found_model
+          begin
+            load fname
+            found_model = true
+          rescue
+            found_model = false
+          end
+        end
+
+      end
+
+      found_model
     end
 
 
