@@ -4,6 +4,7 @@ require 'rails'
 
 require_relative 'transition_table'
 require_relative 'chart_renderer'
+require_relative 'errors'
 
 require 'pp'
 
@@ -30,7 +31,9 @@ require 'pp'
 
 module AASM_StateChart
 
-  # TODO title and subtitle: use HtmlString
+  # TODO title and subtitle: use HtmlString? or plainshape
+
+  # better error message if file not found
 
   class AASM_StateCharts
 
@@ -48,14 +51,15 @@ module AASM_StateChart
     def initialize(options={})
 
       @options = options
-      puts "\n\n@options: #{@options.inspect}"
+      #puts "\n\n@options: #{@options.inspect}"
 
+      @include_paths = []
       @include_paths = get_included_paths options[:path] if options.has_key?(:path) # don't use fetch because nil is meaningful (we need to raise an error)
 
 
       if options[:models].empty? && !options[:dump_configs] && !options[:all]
-      #if !options[:all] && options[:models].empty?  # should never happen; opts parsing should catch it
-        raise_error AASM_NoModels, "You must specify a model to diagram or else use the --all option."
+        #if !options[:all] && options[:models].empty?  # should never happen; opts parsing should catch it
+        raise AASM_NoModels, AASM_NoModels.error_message("You must specify a model to diagram or else use the --all option.")
       end
 
       @output_dir = get_output_dir options.fetch(:directory, '')
@@ -80,35 +84,40 @@ module AASM_StateChart
         dump_attribs @options[:dump_configs]
       end
 
-
       unless @models.blank?
         @models.each do |m|
-          klass = Module.const_get m
 
-          name = klass.name.underscore
+          begin
+            klass = Module.const_get m
 
-          if !(klass.respond_to? :aasm)
-            raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
 
-          else
+            name = klass.name.underscore
 
-            if klass.aasm.states.empty?
-              raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
+            if !(klass.respond_to? :aasm)
+              raise NoAASM_Error, "ERROR: #{klass.name} does not include AASM.  No diagram generated."
+
             else
 
-              renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table, @config_options)
+              if klass.aasm.states.empty?
+                raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
+              else
 
-              filename = File.join(@output_dir, "#{name}.#{@format}")
+                renderer = AASM_StateChart::Chart_Renderer.new(klass, @show_transition_table, @config_options)
 
-              renderer.save(filename, format: @format)
+                filename = File.join(@output_dir, "#{name}.#{@format}")
 
-              puts " * diagrammed #{name} and saved to #{filename}"
+                renderer.save(filename, format: @format)
+
+                puts " * diagrammed #{name} and saved to #{filename}"
+
+              end
 
             end
 
+
+          rescue => e
+            raise AASM_NotFound_Error, "\nERROR: Could not find the model in #{m}.\n"
           end
-
-
         end
 
       end
@@ -127,27 +136,27 @@ module AASM_StateChart
       gv_graphtype = {'graph types': GraphViz::Constants::GRAPHTYPE}
 
       # @url http://www.graphviz.org/content/arrow-shapes
-      gv_arrowshapes = {'Shapes': ['box', 'crow', 'curve', 'icurve', 'diamond', 'dot', 'inv', 'none', 'normal', 'tee', 'vee'],
-                        'modifiers': ['o', 'l', 'r']}
+      #gv_arrowshapes = {'Shapes': ['box', 'crow', 'curve', 'icurve', 'diamond', 'dot', 'inv', 'none', 'normal', 'tee', 'vee'],
+      #                  'modifiers': ['o', 'l', 'r']}
 
       # @url http://www.graphviz.org/content/color-names
-      gv_color_schemes = {}
+      #gv_color_schemes = {}
 
       # TODO friendlize: put into the format for config.yml.  Explain the keys and some values
 
       # node shapes and info @url http://www.graphviz.org/content/node-shapes
 
-      gv_types_info = {
-          EscString: 'a string',
-          GvDouble: 'decimal point number (double)',
-          GvBool: 'boolean (true or false)',
-          Color: "one of the accepted color names, or the hex code WITHOUT the '#'",
-          ArrowType: "one of the arrow shapes with optional modifiers",
-          Rect: "???",
-          SplineType: "???",
-          LblString: "??? label string?  <gv>STRING</gv>",
-          HtmlString: " a string surrounded by '<' and '>' (prepended with '<' and appended with '>')"
-      }
+      #gv_types_info = {
+      #    EscString: 'a string',
+      #    GvDouble: 'decimal point number (double)',
+      #    GvBool: 'boolean (true or false)',
+      #    Color: "one of the accepted color names, or the hex code WITHOUT the '#'",
+      #    ArrowType: "one of the arrow shapes with optional modifiers",
+      #    Rect: "???",
+      #    SplineType: "???",
+      #    LblString: "??? label string?  <gv>STRING</gv>",
+      #    HtmlString: " a string surrounded by '<' and '>' (prepended with '<' and appended with '>')"
+      #}
 
 
       config_hash = case option
@@ -205,10 +214,10 @@ module AASM_StateChart
 
       full_paths = []
       if options_path.blank?
-        raise BadPath_Error, "\n\nERROR: Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
+        raise BadPath_Error, BadPath_Error.error_message("Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories.")
 
       elsif (paths = options_path.split File::PATH_SEPARATOR).count == 0
-        raise BadPath_Error, "\n\nERROR: Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories."
+        raise BadPath_Error, BadPath_Error.error_message("Could not read #{options_path}.  Please check it carefully. Use '#{File::PATH_SEPARATOR}' to separate directories.")
       end
 
       paths.each do |path|
@@ -218,7 +227,7 @@ module AASM_StateChart
           $LOAD_PATH.unshift(fullpath) # add to the start of $LOAD_PATH
           full_paths << fullpath
         else
-          raise PathNotLoaded_Error, "\n\nERROR: Could not load path #{path}."
+          raise PathNotLoaded_Error, PathNotLoaded_Error.error_message("Could not load path #{path}.")
         end
 
       end
@@ -244,39 +253,89 @@ module AASM_StateChart
 
       unless File.exist? './config/environment.rb'
         script_name = File.basename $PROGRAM_NAME
-        raise NoRailsConfig_Error, "Error: unable to find ./config/environment.rb.\n Please run #{script_name} from the root of your Rails application."
+        raise NoRailsConfig_Error, NoRailsConfig_Error.error_message("Unable to find ./config/environment.rb.\n Please run #{script_name} from the root of your Rails application.")
       end
 
       require './config/environment'
     end
 
 
+    def try_requires(method, filename)
+      success = false
+      begin
+        Kernel.send method, filename
+        success = true
+      rescue => e
+        # no op
+      end
+      success
+    end
+
+
     def get_models(all_option, models)
 
       model_classes = []
-      # TODO not going to worry about the all_option right now
-      if all_option
 
+      if all_option
+        puts "\n\nTBD: all_option\n\n"
       else
 
         models.each do |model|
-          puts "\n model: #{model}\n"
-          begin
-            require model
-          rescue
-            @include_paths.each do |fullpath|
-              begin
-                require_relative File.join(fullpath, model)
-              end
-              # TODO how to ignore any error raised?
-            end
 
-            raise ModelNotLoaded_Error, "\n\nERROR: Could not load #{model} (Looked in #{@include_paths} and\n $LOAD_PATH: #{$LOAD_PATH.inspect})."
+          found_model = false
+
+          try_methods = [:require, :require_relative]
+          i = 0
+          while !found_model && i < try_methods.size do
+            begin
+              found_model = try_requires(try_methods[i], model)
+            ensure
+              i += 1
+            end
           end
 
-          model_classes << model.camelize
+          unless found_model
+            begin
+              load fname
+              found_model = true
+            rescue
+              found_model = false
+            end
+          end
+
+
+          unless found_model
+            # TODO - don't continue to iterate if it's found
+            @include_paths.each do |fullpath|
+
+              fname = "#{model}.rb"
+
+              if File.exist?(File.join(fullpath, fname))
+                begin
+                  require_relative File.join(fullpath, model)
+                  found_model = true
+                rescue
+                      #no op
+                end
+              end
+
+            end
+          end
+
+
+          if found_model
+
+            model_basename = File.basename model
+
+            model_classes << File.basename(model_basename, File.extname(model_basename)).camelize
+
+          else
+            raise ModelNotLoaded_Error, ModelNotLoaded_Error.error_message("Could not load #{model} \n   Looked in #{@include_paths} and\n $LOAD_PATH: #{$LOAD_PATH.inspect}).")
+          end
+
         end
-      end
+
+      end # else not all_models
 
       model_classes
 
@@ -291,7 +350,13 @@ module AASM_StateChart
 
 
     def load_models_named(model_names)
-      model_names.map { |model_name| model_name.camelize.constantize }
+      model_names.map do |model_name|
+
+        # must strip off any leading path, add that path to the $Loadpath, and then set the model to just the filename
+        just_model = File.basename model_name
+
+        just_model.camelize.constantize
+      end
     end
 
 
@@ -307,7 +372,7 @@ module AASM_StateChart
       valid_formats = GraphViz::Constants::FORMATS
       unless valid_formats.include? format_extension
         valid_list = valid_formats.join ', '
-        raise BadFormat_Error, "\n\nERROR: File format #{format_extension} is not a valid format.\n   These are the valid formats:\n  #{valid_list}"
+        raise BadFormat_Error, BadFormat_Error.error_message("File format #{format_extension} is not a valid format.\n   These are the valid formats:\n  #{valid_list}")
       end
 
       format_extension
@@ -327,7 +392,7 @@ module AASM_StateChart
             end
           end
         else
-          raise NoConfigFile_Error, "The config file #{config_fn} doesn't exist."
+          raise NoConfigFile_Error, NoConfigFile_Error.error_message("The config file #{config_fn} doesn't exist.")
         end
 
       end
