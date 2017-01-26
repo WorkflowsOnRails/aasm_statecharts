@@ -264,6 +264,13 @@ describe AASM_StateChart::AASM_Statecharts_CLI do
                 /([\s\S]*)\* diagrammed purchase and saved to \.\/doc\/purchase.png/
       end
 
+      describe "./app/models/git_hub  (no extension)" do
+
+        it_will 'handle args', ["./app/models/git_hub"],
+                /([\s\S]*)\* diagrammed git_hub and saved to \.\/doc\/git_hub.png/
+      end
+
+
       describe "#{this_path}/app/models/git_hub  (no extension)" do
 
         it_will 'handle args', ["#{File.join(this_path,'/app/models/git_hub')}"],

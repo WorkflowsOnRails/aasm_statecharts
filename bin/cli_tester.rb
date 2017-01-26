@@ -4,4 +4,6 @@ load 'aasm_statecharts'
 
 # ["-#{arg_info[:short]}", "#{arg_info[:option]}", "#{arg_info[:model]}"]
 
-AASM_StateChart::AASM_Statecharts_CLI.new(['-a'])
+FileUtils.cd (File.expand_path('~/github/AV--shf-project/app/models'))
+
+AASM_StateChart::AASM_Statecharts_CLI.new(["-d", "./docs", "-i", "../app/models" "membership_application"])
