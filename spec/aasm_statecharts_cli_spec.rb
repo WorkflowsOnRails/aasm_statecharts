@@ -67,19 +67,19 @@ describe AASM_StateChart::AASM_Statecharts_CLI do
     end
 
     it 'version: false, dump_configs: false == false' do
-      expect(cli.version_or_graph_configs_opt?('', {version: false, dump_configs: false })).to be_falsey
+      expect(cli.version_or_graph_configs_opt?('', {version: false, dump_configs: false})).to be_falsey
     end
 
     it 'version: false, dump_configs: false == false' do
-      expect(cli.version_or_graph_configs_opt?('', {version: false, dump_configs: :all })).to be_truthy
+      expect(cli.version_or_graph_configs_opt?('', {version: false, dump_configs: :all})).to be_truthy
     end
 
     it 'version: false, dump_configs: false == false' do
-      expect(cli.version_or_graph_configs_opt?('', {version: true, dump_configs: false })).to be_truthy
+      expect(cli.version_or_graph_configs_opt?('', {version: true, dump_configs: false})).to be_truthy
     end
 
     it 'version: false, dump_configs: false == false' do
-      expect(cli.version_or_graph_configs_opt?('', {version: true, dump_configs: :all })).to be_truthy
+      expect(cli.version_or_graph_configs_opt?('', {version: true, dump_configs: :all})).to be_truthy
     end
 
     it 'version: false, dump_configs: false == false' do
@@ -191,16 +191,16 @@ describe AASM_StateChart::AASM_Statecharts_CLI do
       end
 
       describe 'all' do
-        args = {short: 'a', long: 'all', option: 'blorf', model: 'single_state'}
+        args = {short: 'g', long: 'graph-configs', option: 'blorf', model: 'single_state'}
 
-        it_will 'handle args', ["-#{args[:short]}"], /Title([\s\S]*)(#{AASM_StateChart::AASM_StateCharts::COLORS_ATTRIBS_TITLE})/
-        it_will 'handle args', ["--#{args[:long]}"],  /Title([\s\S]*)(#{AASM_StateChart::AASM_StateCharts::GRAPH_ATTRIBS_TITLE})/
+        it_will 'handle args', ["-#{args[:short]}"], /Title([\s\S]*)(#{AASM_StateChart::AASM_StateCharts::ALL_ATTRIBS_TITLE})/
+        it_will 'handle args', ["--#{args[:long]}"], /Title([\s\S]*)(#{AASM_StateChart::AASM_StateCharts::ALL_ATTRIBS_TITLE})/
 
         it_will 'raise error with args', ["-#{args[:short]}", "#{args[:option]}"], AASM_StateChart::CLI_Inputs_ERROR
         it_will 'raise error with args', ["-#{args[:long]}", "#{args[:option]}"], AASM_StateChart::CLI_Inputs_ERROR
 
         it_will 'raise error with args', ["-#{args[:short]}", "#{args[:option]}", "#{args[:model]}"], AASM_StateChart::CLI_Inputs_ERROR
-        it_will 'raise error with args', ["-#{args[:long]}", "#{args[:option]}", "#{args[:model]}"], AASM_StateChart::CLI_Inputs_ERROR
+        it_will 'raise error with args', ["--#{args[:long]}", "#{args[:option]}", "#{args[:model]}"], AASM_StateChart::CLI_Inputs_ERROR
 
 
       end
@@ -254,6 +254,39 @@ describe AASM_StateChart::AASM_Statecharts_CLI do
 
     end
 
+    describe 'model filename has a path on it' do
+
+      this_path = File.absolute_path( File.join(__dir__, '..') )
+
+      describe "#{this_path}/app/models/purchase.rb" do
+
+        it_will 'handle args', ["#{File.join(this_path,'/app/models/purchase')}"],
+                /([\s\S]*)\* diagrammed purchase and saved to \.\/doc\/purchase.png/
+      end
+
+      describe "#{this_path}/app/models/git_hub  (no extension)" do
+
+        it_will 'handle args', ["#{File.join(this_path,'/app/models/git_hub')}"],
+                /([\s\S]*)\* diagrammed git_hub and saved to \.\/doc\/git_hub.png/
+      end
+
+
+      describe "-i #{this_path}  app/models/claim.rb" do
+
+        it_will 'handle args', ["-i", "#{this_path}", "app/models/claim"],
+                /([\s\S]*)\* diagrammed claim and saved to \.\/doc\/claim.png/
+      end
+
+      describe 'error: file not found' do
+
+        it_will 'raise error with args', ["#{File.join(this_path, '/app/models/not-a-file')}"],
+                LoadError
+      end
+
+
+    end
+
+
     describe 'all' do
       it_will 'handle args', ['-a'], "#{AASM_StateChart::VERSION}\n"
       it_will 'handle args', ['--all'], "#{AASM_StateChart::VERSION}\n"
@@ -261,6 +294,7 @@ describe AASM_StateChart::AASM_Statecharts_CLI do
       it_will 'raise error with args', ['--all blorf'], OptionParser::InvalidOption
 
     end
+
 
   end
 

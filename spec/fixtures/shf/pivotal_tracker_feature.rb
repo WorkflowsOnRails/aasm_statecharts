@@ -8,17 +8,23 @@ class PivotalTrackerFeature < ActiveRecord::Base
 
     state :new_in_icebox, initial: true
 
+    state :points_assigned
+
     state :started, enter: :write_feature_or_spec, exit: :all_rake_tasks_pass
     state :waiting_for_scrum_review
 
-    state :waiting_for_client_review, enter: :press_DELIVER_button
+    state :waiting_for_client_review, enter: :press_FINISHED_button,  exit: :press_DELIVER_button
 
     state :accepted, enter: :press_Accepted_button
     state :declined, enter: :press_Rejected_button
 
 
+    event :vote_on_feature do
+      transitions from: :new_in_icebox, to: :points_assigned, guard: :at_least_3_people_voted
+    end
+
     event :start_work do
-      transitions from: :new_in_icebox, to: :started
+      transitions from: :points_assigned, to: :started
 
     end
 
