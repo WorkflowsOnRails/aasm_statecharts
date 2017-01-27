@@ -33,6 +33,7 @@ module AASM_StateChart
           directory: './doc',
           models: [],
           version: false,
+          no_rails: false
           #          dump_configs: false,
           #          path: false,
           #          root: false,
@@ -49,6 +50,7 @@ module AASM_StateChart
       puts @out
 
     end
+
 
     def pretty_formats_list
 
@@ -99,10 +101,10 @@ module AASM_StateChart
 
     def no_options(opts)
       # defaults = :format, :directory, :models
-      # binary only options = :all, :version
+      # binary only options = :all, :version, :no_rails
       # if there are any other options, they've been inserted (and set) when options with .parse!
 
-      defaults_or_binary = [:format, :directory, :models, :all, :version]
+      defaults_or_binary = [:format, :directory, :models, :all, :version, :no_rails]
       remaining_opts = opts.reject { |o| defaults_or_binary.include?(o) }
 
       !opts[:all] && !opts[:version] && remaining_opts.count == 0
@@ -196,6 +198,11 @@ module AASM_StateChart
           @options[:subclass_root_model] = subclass_root_model
         end
 
+        opts.on('n', '--no-rails', "Do not load Rails. (The model(s) are not subclasses of anything Rails.)") do
+          @options[:no_rails] = true
+        end
+
+
         opts.on('-i', '--include PATH', "Include the path in the load path.#{NEXTLINE}PATH can have multiple directories, separated by your OS separator #{File::PATH_SEPARATOR}") do |path|
           @options[:path] = path
         end
@@ -261,16 +268,6 @@ module AASM_StateChart
 
       check_options @options, args
 
-
-      #    if args_empty?(args) && !version_or_graph_configs_opt?(args, @options)
-
-      #      raise AASM_StateChart::AASM_NoModels, "You must specify a model if you don't specify any options."
-
-      #    elsif !@options[:version]
-
-      #      puts @out = AASM_StateChart::AASM_StateCharts.new(@options).run
-
-      #    end
 
       puts @out = AASM_StateChart::AASM_StateCharts.new(@options).run if !@options[:version]
 

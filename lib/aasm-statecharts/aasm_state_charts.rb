@@ -55,8 +55,7 @@ module AASM_StateChart
 
       @output_dir = get_output_dir options.fetch(:directory, '')
 
-      rails_needed = true
-      load_rails  if rails_needed
+      load_rails  unless @options[:no_rails]
 
       @models = get_models options[:all], options[:models]
 
