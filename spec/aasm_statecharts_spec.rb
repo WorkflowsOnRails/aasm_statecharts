@@ -326,10 +326,23 @@ describe AASM_StateChart::AASM_StateCharts do
 
   describe 'rails class' do
 
+    describe 'no rails = true' do
+
+      it_will 'not raise an error', "model isn't ActiveRecord::Base subclass so Rails isn't needed",
+              good_options.update({models: ['not_rails_subclass_two_simple_states']}).update({no_rails: true}).merge({path: include_path})
+
+      # FIXME need to 'unload' Rails
+      it_will 'raise error', "model is ActiveRecord::Base subclass so Rails is needed",
+              AASM_StateChart::NoRailsConfig_Error,
+              good_options.update({models: ['single_state']}).update({no_rails: true}).update({path: include_path})
+
+    end
+
+
     it 'no error if it is not run under Rails config directory' do
       options = good_options
       # FIXME how to run this under a different dir so it can fail?
-      expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error AASM_StateChart::NoRailsConfig_Error
+      expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error AASM_StateChart::ModelNotLoaded_Error
     end
 
 
