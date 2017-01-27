@@ -1,6 +1,6 @@
 require 'aasm'
 
-class NotRailsSubclassTwoSimpleStates
+class NoRailsTwoSimpleStates
   include AASM
 
   aasm do
