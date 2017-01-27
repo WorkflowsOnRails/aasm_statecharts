@@ -13,7 +13,7 @@
 
 require 'spec_helper'
 
-load File.absolute_path(File.join(__dir__, '..', 'bin', 'aasm_statecharts'))
+load File.expand_path(File.join(__dir__, '..', 'bin', 'aasm_statecharts'))
 
 
 RSpec.shared_examples 'handle args' do |args, result|
