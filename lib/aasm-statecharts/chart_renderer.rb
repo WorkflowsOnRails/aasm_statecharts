@@ -159,7 +159,7 @@ module AASM_StateChart
 
     def get_callbacks(options, keys)
       get_options(options, keys)
-          .map { |callback| "#{callback}();" }
+          .map { |callback| "#{callback}" }
           .join(' ')
     end
 
