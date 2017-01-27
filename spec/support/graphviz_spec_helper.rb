@@ -1,5 +1,5 @@
+module GraphvizSpecHelper
 
-module SpecHelper
   def name_of(s)
     s.gsub(/\A"|"\Z/, '')
   end
@@ -17,4 +17,5 @@ module SpecHelper
   def expect_label_matches(obj, regex)
     expect(obj['label'].source).to match regex
   end
+
 end

@@ -6,7 +6,7 @@
 #
 
 require 'spec_helper'
-require 'statechart_helper'
+
 
 
 RSpec.shared_examples 'saves to a file' do |aasm_model, output_format|
@@ -35,24 +35,26 @@ end
 
 
 describe AASM_StateChart::Chart_Renderer do
-  include SpecHelper
 
-  Dir.mkdir(OUT_DIR) unless Dir.exist? OUT_DIR
+  include GraphvizSpecHelper
+
 
   describe 'basic tests with single state example' do
 
-    renderer = AASM_StateChart::Chart_Renderer.new(SingleState)
+    require_relative '../spec/fixtures/no_rails_single_state'
+
+    renderer = AASM_StateChart::Chart_Renderer.new(NoRailsSingleState)
 
     it 'the single state example' do
 
       nodes = renderer.graph.each_node
 
-      expect_label_matches(nodes['single'], /entry \/ foo\(\); bar\(\);/)
-      expect_label_matches(nodes['single'], /exit \/ baz\(\); quux\(\);/)
+      expect_label_matches(nodes['single'], /entry: foo bar/)
+      expect_label_matches(nodes['single'], /exit: baz quux/)
 
     end
 
-    it_should_behave_like 'it has this many nodes', renderer, 2
+    it_should_behave_like 'it has this many nodes', renderer, 4
 
     describe 'edges' do
 
@@ -66,37 +68,47 @@ describe AASM_StateChart::Chart_Renderer do
       end
     end
 
-    it_should_behave_like 'saves to a file', SingleState, 'png'
+    it_should_behave_like 'saves to a file', NoRailsSingleState, 'png'
 
   end
 
-  describe 'the claim model example' do
-    renderer = AASM_StateChart::Chart_Renderer.new(Claim)
+  describe 'the no_rails_claim model example' do
+
+    require_relative '../spec/fixtures/no_rails_claim'
+
+    renderer = AASM_StateChart::Chart_Renderer.new(NoRailsClaim)
 
     it_should_behave_like 'it has this many edges', renderer, 5
 
-    it_should_behave_like 'it has this many nodes', renderer, 5
+    it_should_behave_like 'it has this many nodes', renderer, 7
 
-    it_should_behave_like 'saves to a file', Claim, 'jpg'
+    it_should_behave_like 'saves to a file', NoRailsClaim, 'jpg'
 
   end
 
 
   describe 'two simple states example' do
-    renderer = AASM_StateChart::Chart_Renderer.new(TwoSimpleStates)
+
+    require_relative '../spec/fixtures/no_rails_two_simple_states'
+
+    renderer = AASM_StateChart::Chart_Renderer.new(NoRailsTwoSimpleStates)
 
     it_should_behave_like 'it has this many edges', renderer, 3
 
-    it_should_behave_like 'it has this many nodes', renderer, 3
+    it_should_behave_like 'it has this many nodes', renderer, 5
 
-    it_should_behave_like 'saves to a file', TwoSimpleStates, 'png'
+    it_should_behave_like 'saves to a file', NoRailsTwoSimpleStates, 'png'
 
   end
 
 
   # TODO output to a dot file and check that
+
   describe 'many states example' do
-    renderer = AASM_StateChart::Chart_Renderer.new(ManyStates, true)
+
+    require_relative '../spec/fixtures/no_rails_many_states'
+
+    renderer = AASM_StateChart::Chart_Renderer.new(NoRailsManyStates, true)
 
     describe 'formatting' do
 
@@ -150,12 +162,12 @@ describe AASM_StateChart::Chart_Renderer do
 
         it 'a to b' do
           a_b = find_edge(edges, 'a', 'b')
-          expect(a_b['label'].source.strip).to eq 'y  / y_before(); y_after();'
+          expect(a_b['label'].source.strip).to eq 'y  / y_before y_after'
         end
 
         it 'b to a' do
           b_a = find_edge(edges, 'b', 'a')
-          expect(b_a['label'].source.strip).to eq 'z  / z1_before(); z2_before(); z1_after(); z2_after();'
+          expect(b_a['label'].source.strip).to eq 'z  / z1_before z2_before z1_after z2_after'
         end
 
         it 'b to c' do
@@ -170,19 +182,19 @@ describe AASM_StateChart::Chart_Renderer do
     describe 'nodes' do
       let(:nodes) { renderer.graph.each_node }
 
-      it_should_behave_like 'it has this many nodes', renderer, 6
+      it_should_behave_like 'it has this many nodes', renderer, 8
 
       it 'node a label' do
-        expect_label_matches(nodes['a'], /exit \/ a_exit/)
+        expect_label_matches(nodes['a'], /exit: a_exit/)
       end
 
       it 'node b label' do
-        expect_label_matches(nodes['b'], /\{B|entry \/ b1_enter(); b2_enter();\\lexit \/ b1_exit(); b2_exit();}/)
+        expect_label_matches(nodes['b'], /\{B|entry: b1_enter b2_enter\\lexit: b1_exit b2_exit}/)
       end
 
     end
 
-    it_should_behave_like 'saves to a file', ManyStates, 'dot'
+    it_should_behave_like 'saves to a file', NoRailsManyStates, 'dot'
 
   end
 end

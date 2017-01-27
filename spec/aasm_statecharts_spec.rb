@@ -6,82 +6,34 @@
 #
 
 require 'spec_helper'
-require 'statechart_helper'
-
-require 'graphviz'
 
 require 'fileutils'
 
-DEFAULT_MODEL = 'two_simple_states'
-
-
-def good_options
-  options = {
-      all: false,
-      directory: OUT_DIR,
-      format: 'png',
-      models: [DEFAULT_MODEL]
-  }
-end
-
-
-def rm_specout_outfile(outfile = "#{DEFAULT_MODEL}.png")
-  fullpath = File.join(OUT_DIR, outfile)
-  # FileUtils.rm fullpath if File.exist? fullpath
-  # puts "     (cli_spec: removed #{fullpath})"
-end
-
-
-#- - - - - - - - - - 
-
-def config_from(fn)
-  config = {}
-  if File.exist? fn
-    File.open fn do |cf|
-      begin
-        config = Psych.safe_load(cf)
-      rescue Psych::SyntaxError => ex
-        ex.message
-      end
-    end
-  end
-
-  config
-end
+UGLY_CONFIG_FN = File.join(__dir__, 'fixtures', 'ugly_config_opts.yml')
 
 
 #- - - - - - - - - -
 
 describe AASM_StateChart::AASM_StateCharts do
-  include SpecHelper
-
-
-  Dir.mkdir(OUT_DIR) unless Dir.exist? OUT_DIR
-
-  include_path = File.join(__dir__, 'fixtures')
-
-  ugly_config_fn = File.join(__dir__, 'fixtures', 'ugly_config_opts.yml')
-
-  ugly_config = config_from ugly_config_fn
 
 
   describe 'include path' do
 
     it_will 'raise error', 'blank path',
             AASM_StateChart::BadPath_Error,
-            good_options.merge({path: ''})
+            good_options.update({path: ''})
 
     it_will 'raise error', 'nil path',
             AASM_StateChart::BadPath_Error,
-            good_options.merge({path: nil})
+            good_options.update({path: nil})
 
     it_will 'raise error', 'ill-formed path',
             AASM_StateChart::PathNotLoaded_Error,
-            good_options.merge({path: 'blorfy, blorf, blorf? blorf! @blorf'})
+            good_options.update({path: 'blorfy, blorf, blorf? blorf! @blorf'})
 
     it_will 'raise error', 'path dir does not exist',
             AASM_StateChart::PathNotLoaded_Error,
-            good_options.merge({path: 'does/not/exist'})
+            good_options.update({path: 'does/not/exist'})
 
 
     it 'handles a list of paths' do
@@ -89,7 +41,7 @@ describe AASM_StateChart::AASM_StateCharts do
       rails_models_path = File.join(__dir__, '..', 'app', 'models')
 
       # have a model in each of the included paths
-      options = good_options.merge({path: "#{include_path}#{File::PATH_SEPARATOR}#{rails_models_path}"}).update({models: ['purchase', 'single_state']})
+      options = good_options.update({path: "#{INCLUDE_PATH}#{File::PATH_SEPARATOR}#{rails_models_path}"}).update({models: ['purchase', 'single_state']})
 
       # will produce 2 files
 
@@ -161,18 +113,18 @@ describe AASM_StateChart::AASM_StateCharts do
 
     it 'give a root class' do
       pending
-      good_options.merge({root_class: ['single_state']}).merge({path: include_path})
+      good_options.merge({root_class: ['single_state']})
     end
 
 
     it "give a subclass-root class" do
       pending
-      good_options.merge({subclass_root_model: ['single_state']}).merge({path: include_path})
+      good_options.merge({subclass_root_model: ['single_state']})
     end
 
     it_will 'raise error', 'cannot have same model for root and subclass-root',
             AASM_StateChart::RootAndSubclassSame_Error,
-            good_options.merge({root_class: ['single_state']}).merge({subclass_root_model: ['single_state']}).merge({path: include_path})
+            good_options.merge({root_class: ['single_state']}).merge({subclass_root_model: ['single_state']})
 
 
   end
@@ -182,8 +134,8 @@ describe AASM_StateChart::AASM_StateCharts do
 
     after(:each) { rm_specout_outfile }
 
-    it_will 'use doc directory', 'no directory option provided', good_options.merge({path: include_path}).reject! { |k, v| k == :directory }
-    it_will 'use doc directory', 'directory = empty string', good_options.update({directory: ''}).merge({path: include_path})
+    it_will 'use doc directory', 'no directory option provided', good_options.reject! { |k, v| k == :directory }
+    it_will 'use doc directory', 'directory = empty string', good_options.update({directory: ''})
 
 
     it 'creates the directory if it does not exist' do
@@ -191,7 +143,7 @@ describe AASM_StateChart::AASM_StateCharts do
       test_dir = File.join(__dir__, 'blorf')
       FileUtils.rm_r(test_dir) if Dir.exist? test_dir
 
-      options = good_options.merge({path: include_path})
+      options = good_options
       options[:directory] = test_dir
 
       AASM_StateChart::AASM_StateCharts.new(options).run
@@ -207,23 +159,22 @@ describe AASM_StateChart::AASM_StateCharts do
     after(:each) { rm_specout_outfile }
 
     options = good_options
-    options
 
     it_will 'raise error', 'error: config file option given is non-existent',
             AASM_StateChart::NoConfigFile_Error,
-            good_options.update({config_file: 'blorfy.blorf'}).merge({path: include_path})
+            good_options.update({config_file: 'blorfy.blorf'})
 
     it_will 'not raise an error', 'no config file exists, use the default options',
-            good_options.merge({path: include_path})
+            good_options
 
 
     describe 'config file graph, node, edge styles ' do
 
       # TODO simplify! refactor!  shared_context ?
 
-      options[:config_file] = ugly_config_fn
+      options[:config_file] = UGLY_CONFIG_FN
       options[:format] = 'dot'
-      options[:path] = include_path
+      options[:path] = INCLUDE_PATH
 
       let!(:graph_out) {
         AASM_StateChart::AASM_StateCharts.new(options).run
@@ -243,6 +194,10 @@ describe AASM_StateChart::AASM_StateCharts do
       let(:edge_attribs) { edge0.each_attribute { |a| a } }
 
       let(:graph_attribs) { graph_out.each_attribute { |a| a } }
+
+
+      ugly_config = config_from UGLY_CONFIG_FN
+
 
       (ugly_config['graph']['node_style']).each do |k, v|
 
@@ -295,46 +250,47 @@ describe AASM_StateChart::AASM_StateCharts do
 
     it_will 'raise error', 'model cannot be loaded',
             AASM_StateChart::ModelNotLoaded_Error,
-            good_options.update({models: ['blorfy']}).merge({path: include_path})
+            good_options.update({models: ['blorfy']})
 
     it_will 'raise error', 'warns when class does not have aasm included',
             AASM_StateChart::NoAASM_Error,
-            good_options.update({models: ['no_aasm']}).merge({path: include_path})
+            good_options.update({models: ['no_aasm']})
 
     it_will 'raise error', 'warns when class has no states defined',
             AASM_StateChart::NoStates_Error,
-            good_options.update({models: ['empty_aasm']}).merge({path: include_path})
+            good_options.update({models: ['empty_aasm']})
 
 
     it_will 'raise error', 'fails if an invalid file format is given',
             AASM_StateChart::BadFormat_Error,
-            good_options.update({models: ['single_state'], format: 'blorf'}).merge({path: include_path})
+            good_options.update({models: ['single_state'], format: 'blorf'})
 
 
     it_will 'not raise an error', 'load a list of valid classes',
-            good_options.update({models: ['single_state', 'many_states']}).merge({path: include_path})
+            good_options.update({models: ['single_state', 'many_states']})
 
     it_will 'raise error', 'one bad class in a list',
             AASM_StateChart::ModelNotLoaded_Error,
-            good_options.update({models: ['single_state', 'blorf']}).merge({path: include_path})
+            good_options.update({models: ['single_state', 'blorf']})
 
     it_will 'not raise an error', "model isn't ActiveRecord::Base subclass",
-            good_options.update({models: ['not_rails_subclass_two_simple_states']}).merge({path: include_path})
+            good_options.update({models: ['no_rails_two_simple_states']})
 
 
   end
+
 
   describe 'rails class' do
 
     describe 'no rails = true' do
 
       it_will 'not raise an error', "model isn't ActiveRecord::Base subclass so Rails isn't needed",
-              good_options.update({models: ['not_rails_subclass_two_simple_states']}).update({no_rails: true}).merge({path: include_path})
+              good_options.update({models: ['not_rails_subclass_two_simple_states']}).update({no_rails: true})
 
       # FIXME need to 'unload' Rails
       it_will 'raise error', "model is ActiveRecord::Base subclass so Rails is needed",
               AASM_StateChart::NoRailsConfig_Error,
-              good_options.update({models: ['single_state']}).update({no_rails: true}).update({path: include_path})
+              good_options.update({models: ['single_state']}).update({no_rails: true})
 
     end
 
@@ -349,8 +305,8 @@ describe AASM_StateChart::AASM_StateCharts do
     it 'loads a rails class Purchase' do
 
       options = {format: 'png', models: ['purchase'], directory: OUT_DIR}
-      options[:config_file] = ugly_config_fn
-      options[:path] = File.absolute_path(File.join(__dir__, '..', 'app', 'models'))
+      options[:config_file] = UGLY_CONFIG_FN
+      options[:path] = File.expand_path(File.join(__dir__, '..', 'app', 'models'))
 
       AASM_StateChart::AASM_StateCharts.new(options).run
 

@@ -84,21 +84,3 @@ RSpec.shared_examples 'not raise an error' do |desc, options|
   end
 end
 
-
-#- - - - - - - - - -
-
-def config_from(fn)
-  config = {}
-  if File.exist? fn
-    File.open fn do |cf|
-      begin
-        config = Psych.safe_load(cf)
-      rescue Psych::SyntaxError => ex
-        ex.message
-      end
-    end
-  end
-
-  config
-end
-

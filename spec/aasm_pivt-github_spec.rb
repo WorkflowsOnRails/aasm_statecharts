@@ -6,50 +6,32 @@
 #
 
 require 'spec_helper'
-require 'statechart_helper'
-
-require 'graphviz'
 
 require 'fileutils'
 
 
-
-
-def good_options
-
-  include_path = File.join(__dir__, 'fixtures','shf')
-
-  nice_config_fn = File.join(include_path, 'nice_config_opts.yml')
-
-  options = {
-      all: false,
-      directory: OUT_DIR,
-      format: 'png',
-      models: ['pivotal_tracker_feature'],
-      config_file: nice_config_fn,
-      path: include_path
-  }
-end
-
 #- - - - - - - - - -
 
 describe AASM_StateChart::AASM_StateCharts do
-  include SpecHelper
 
-
-  Dir.mkdir(OUT_DIR) unless Dir.exist? OUT_DIR
+  include GraphvizSpecHelper
 
 
   describe 'pivotalTracker and github model classes' do
-    options = good_options
 
 
-    it_will 'not raise an error', 'load github',
+    it_will 'not raise an error', 'github',
             good_options.update({models: ['git_hub']})
+                .update({path: File.join(INCLUDE_PATH, 'shf')})
+                .update({config_file: File.join(INCLUDE_PATH, 'shf', 'aasm_diagram_blue_green_config.yml')})
+                .update({directory: File.join(INCLUDE_PATH, 'shf')})
 
 
-    it_will 'not raise an error', 'load pivotal_tracker_feature',
+    it_will 'not raise an error', 'pivotal_tracker_feature',
             good_options.update({models: ['pivotal_tracker_feature']})
+                .update({path: File.join(INCLUDE_PATH, 'shf')})
+                .update({config_file: File.join(INCLUDE_PATH, 'shf', 'aasm_diagram_blue_green_config.yml')})
+                .update({directory: File.join(INCLUDE_PATH, 'shf')})
 
 
   end
