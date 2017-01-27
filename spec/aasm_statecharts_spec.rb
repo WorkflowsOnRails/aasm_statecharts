@@ -182,8 +182,8 @@ describe AASM_StateChart::AASM_StateCharts do
 
     after(:each) { rm_specout_outfile }
 
-    it_will 'use doc directory', 'no directory option provided', good_options.reject! { |k, v| k == :directory }
-    it_will 'use doc directory', 'directory = empty string', good_options.update({directory: ''})
+    it_will 'use doc directory', 'no directory option provided', good_options.merge({path: include_path}).reject! { |k, v| k == :directory }
+    it_will 'use doc directory', 'directory = empty string', good_options.update({directory: ''}).merge({path: include_path})
 
 
     it 'creates the directory if it does not exist' do
@@ -191,7 +191,7 @@ describe AASM_StateChart::AASM_StateCharts do
       test_dir = File.join(__dir__, 'blorf')
       FileUtils.rm_r(test_dir) if Dir.exist? test_dir
 
-      options = good_options
+      options = good_options.merge({path: include_path})
       options[:directory] = test_dir
 
       AASM_StateChart::AASM_StateCharts.new(options).run
@@ -207,13 +207,14 @@ describe AASM_StateChart::AASM_StateCharts do
     after(:each) { rm_specout_outfile }
 
     options = good_options
+    options
 
     it_will 'raise error', 'error: config file option given is non-existent',
             AASM_StateChart::NoConfigFile_Error,
-            good_options.update({config_file: 'blorfy.blorf'})
+            good_options.update({config_file: 'blorfy.blorf'}).merge({path: include_path})
 
     it_will 'not raise an error', 'no config file exists, use the default options',
-            good_options
+            good_options.merge({path: include_path})
 
 
     describe 'config file graph, node, edge styles ' do
@@ -233,8 +234,10 @@ describe AASM_StateChart::AASM_StateCharts do
       }
 
       # GraphViz does not have global attributes, so you have to check individual nodes or edges
-      let!(:node0) { graph_out.get_node_at_index(0) }
-      let(:node_attribs) { node0.each_attribute { |a| a } }
+      #   node 0 is the title
+
+      let!(:node1) { graph_out.get_node_at_index(1) }
+      let(:node_attribs) { node1.each_attribute { |a| a } }
 
       let!(:edge0) { graph_out.get_edge_at_index(0) }
       let(:edge_attribs) { edge0.each_attribute { |a| a } }
@@ -245,7 +248,10 @@ describe AASM_StateChart::AASM_StateCharts do
 
         it "node #{k.to_s}" do
 
-          expect(node_attribs.fetch(k.to_s, nil)).not_to be_nil # will be something like a GraphViz::Types::EscString
+          node_a = node_attribs
+          node_val = node_attribs.fetch(k.to_s, nil)
+
+          expect(node_attribs.fetch(k.to_s, nil)).not_to be_nil    # will be something like a GraphViz::Types::EscString
           expect(node_attribs.fetch(k.to_s, '').to_s).to eq("\"#{v}\"") #('"Courier New"')
 
         end
@@ -288,15 +294,14 @@ describe AASM_StateChart::AASM_StateCharts do
 
 
     it_will 'raise error', 'model cannot be loaded',
-            LoadError,
+            AASM_StateChart::ModelNotLoaded_Error,
             good_options.update({models: ['blorfy']}).merge({path: include_path})
 
-
-    it_will 'raise error', 'warns when given a class that does not have aasm included',
+    it_will 'raise error', 'warns when class does not have aasm included',
             AASM_StateChart::NoAASM_Error,
             good_options.update({models: ['no_aasm']}).merge({path: include_path})
 
-    it_will 'raise error', 'warns when given a class that has no states defined',
+    it_will 'raise error', 'warns when class has no states defined',
             AASM_StateChart::NoStates_Error,
             good_options.update({models: ['empty_aasm']}).merge({path: include_path})
 
@@ -310,7 +315,7 @@ describe AASM_StateChart::AASM_StateCharts do
             good_options.update({models: ['single_state', 'many_states']}).merge({path: include_path})
 
     it_will 'raise error', 'one bad class in a list',
-            LoadError,
+            AASM_StateChart::ModelNotLoaded_Error,
             good_options.update({models: ['single_state', 'blorf']}).merge({path: include_path})
 
     it_will 'not raise an error', "model isn't ActiveRecord::Base subclass",
