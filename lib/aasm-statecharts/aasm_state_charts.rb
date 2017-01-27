@@ -1,7 +1,6 @@
 require 'graphviz'
-require 'active_record'
-require 'rails'
 
+# TODO these shouldn't be necessary,... right?
 require_relative 'transition_table'
 require_relative 'chart_renderer'
 require_relative 'errors'
@@ -9,11 +8,16 @@ require_relative 'graphviz_options'
 
 require 'pp'
 
+require 'active_support'
+require 'active_support/core_ext'  # must explicitly require so that blank? methods can be required/loaded
+
+
+
 # Library module than handles translating AASM state machines to statechart
 # diagrams.
 #
 # Usage is simple. First, create an instance of AASM_StateChart::Renderer, passing
-# in the class that has the AASM state machine that you would like to generate
+# in the class that h                      s the AASM state machine that you would like to generate
 # the diagram of. Then call #save with the filename to save the diagram to, as well
 # as the format to save in. This must be one of the formats specified in
 # GraphViz::Constants::FORMATS.
@@ -161,6 +165,7 @@ module AASM_StateChart
     #  used to get all subclasses of ActiveRecord.  Is there a way to get them without loading all of rails?
     def load_rails
 
+      puts " LOADing RAILS!"
       unless File.exist? './config/environment.rb'
         script_name = File.basename $PROGRAM_NAME
         raise NoRailsConfig_Error, NoRailsConfig_Error.error_message("Unable to find ./config/environment.rb.\n Please run #{script_name} from the root of your Rails application.")
