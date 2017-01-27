@@ -198,7 +198,7 @@ module AASM_StateChart
           @options[:subclass_root_model] = subclass_root_model
         end
 
-        opts.on('n', '--no-rails', "Do not load Rails. (The model(s) are not subclasses of anything Rails.)") do
+        opts.on('-n', '--no-rails', "Do not load Rails. (The model(s) are not subclasses of anything Rails.)") do
           @options[:no_rails] = true
         end
 
