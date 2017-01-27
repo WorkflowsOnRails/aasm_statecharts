@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'pg'
-gem 'rails'
+gem 'pg', require: false
+gem 'rails', require: false
 
 gem 'ruby-graphviz'
 gem 'aasm', '>= 4.0'
