@@ -23,7 +23,7 @@ class NoRailsManyStates
     end
 
     event :many_from do
-      transitions from: [:a, :b], to: :c, guard: [:many_guard1, :many_guard2]
+      transitions from: [:a, :b], to: :c, guard: [[:many_guard1, :many_guard2], :many_guard3]
     end
 
   end

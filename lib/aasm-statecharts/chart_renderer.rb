@@ -211,7 +211,7 @@ module AASM_StateChart
 
 
     def render_guard(guard)
-      guard.present? ? "[#{guard}]" : ''
+      guard.present? ? "#{ ([] << guard).flatten }" : ''
     end
 
 

@@ -157,7 +157,7 @@ describe AASM_StateChart::Chart_Renderer do
           find_edge(edges, renderer.start_node.id, 'a')
 
           a_a = find_edge(edges, 'a', 'a')
-          expect_label_matches(a_a, /x \[xa_guard\]/)
+          expect_label_matches(a_a, /x \[:xa_guard\]/)
         end
 
         it 'a to b' do
@@ -171,10 +171,16 @@ describe AASM_StateChart::Chart_Renderer do
         end
 
         it 'b to c' do
-          find_edge(edges, 'c', renderer.end_node.id)
+         # find_edge(edges, 'c', renderer.end_node.id)
           b_c = find_edge(edges, 'b', 'c')
-          expect_label_matches(b_c, /x/)
+          expect_label_matches(b_c, /x \[:xbc1_guard, :xbc2_guard\]/)
         end
+
+        it 'from: [:a, :b], to: :c, guard: [:many_guard1, :many_guard2]' do
+          a_c = find_edge(edges, 'a', 'c')
+          expect_label_matches(a_c, /many_from \[:many_guard1, :many_guard2, :many_guard3\]/)
+        end
+
       end
 
     end
