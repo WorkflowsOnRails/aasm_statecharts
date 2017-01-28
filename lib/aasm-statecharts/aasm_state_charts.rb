@@ -9,8 +9,7 @@ require_relative 'graphviz_options'
 require 'pp'
 
 require 'active_support'
-require 'active_support/core_ext'  # must explicitly require so that blank? methods can be required/loaded
-
+require 'active_support/core_ext' # must explicitly require so that blank? methods can be required/loaded
 
 
 # Library module than handles translating AASM state machines to statechart
@@ -59,7 +58,7 @@ module AASM_StateChart
 
       @output_dir = get_output_dir options.fetch(:directory, '')
 
-      load_rails  unless @options[:no_rails]
+      load_rails unless @options[:no_rails]
 
       @models = get_models options[:all], options[:models]
 
@@ -111,7 +110,7 @@ module AASM_StateChart
 
 
           rescue => e
-            raise  e #AASM_NotFound_Error, "\nERROR: Could not find the model in #{m}.\n"
+            raise e #AASM_NotFound_Error, "\nERROR: Could not find the model in #{m}.\n"
           end
         end
 
@@ -157,6 +156,8 @@ module AASM_StateChart
 
       out_dir = options_dir == '' ? default_dir : options_dir
 
+      # FIXME  if out_dir is a path, need to recurse down into it. then curse it again
+
       Dir.mkdir(out_dir) unless Dir.exist? out_dir
       out_dir
     end
@@ -165,7 +166,6 @@ module AASM_StateChart
     #  used to get all subclasses of ActiveRecord.  Is there a way to get them without loading all of rails?
     def load_rails
 
-      puts " LOADing RAILS!"
       unless File.exist? './config/environment.rb'
         script_name = File.basename $PROGRAM_NAME
         raise NoRailsConfig_Error, NoRailsConfig_Error.error_message("Unable to find ./config/environment.rb.\n Please run #{script_name} from the root of your Rails application.")
@@ -185,24 +185,29 @@ module AASM_StateChart
 
         models.each do |model|
 
-          found_model = false
+          begin
+            found_model = false
 
-          fname = "#{model}.rb"
+            fname = "#{model}.rb"
 
-          found_model = require_or_load(model, fname)
+            found_model = require_or_load(model, fname)
 
 
-          unless found_model
+            unless found_model
 
-            i = 0
+              i = 0
 
-            while !found_model && i < @include_paths.size
-              found_model = require_or_load(model, File.join(@include_paths[i], fname) )
-              i += 1
+              while !found_model && i < @include_paths.size
+                found_model = require_or_load(model, File.join(@include_paths[i], fname))
+                i += 1
+              end
+
+
             end
 
+          rescue => e
+            raise e
           end
-
 
           if found_model
 
@@ -238,8 +243,8 @@ module AASM_StateChart
           begin
             found_model = try_requires(try_methods[i], model)
           rescue => e
-            # no op
-            puts "rescued #{try_methods[i]} #{model}"
+            found_model = false
+            raise e
           ensure
             i += 1
           end
@@ -267,7 +272,8 @@ module AASM_StateChart
         Kernel.send method, model
         success = true
       rescue => e
-        # no op
+        success = false
+        raise ModelNotLoaded_Error, ModelNotLoaded_Error.error_message("#{model} exists but there was an error when attempting: #{method.to_s} '#{model.to_s}':\n#{ModelNotLoaded_Error.show_cause(e)}\n\n")
       end
       success
     end
