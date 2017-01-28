@@ -1,0 +1,1 @@
+./bin/aasm_statecharts -i ./spec/fixtures/shf --no-rails -c ./spec/fixtures/shf/aasm_diagram_blue_green_config.yml -d ./spec/fixtures/shf pivotal_tracker_feature
