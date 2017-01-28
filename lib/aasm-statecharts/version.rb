@@ -1,3 +1,6 @@
 module AASM_StateChart
-  VERSION = '1.1.01'
+  APP_NAME       = 'aasm_statecharts'
+  APP_HUMAN_NAME = 'AASM StateCharts'
+
+  VERSION = '1.1.4'
 end

@@ -7,13 +7,24 @@ end
 require 'rspec'
 
 require 'aasm'
-require 'active_record'
 
-require_relative '../lib/aasm_statecharts'
+require 'graphviz'
 
-require_relative '../spec/fixtures/no_aasm'
-require_relative '../spec/fixtures/empty_aasm'
-require_relative '../spec/fixtures/single_state'
-require_relative '../spec/fixtures/two_simple_states'
-require_relative '../spec/fixtures/claim'
-require_relative '../spec/fixtures/many_states'
+#require 'active_record'
+
+require File.expand_path(File.join(__dir__, '..', 'lib','aasm_statecharts.rb'))
+
+
+#Dir[File.join(__dir__, 'fixtures','*.rb')].each { |file| require file }
+
+Dir[File.join(__dir__, 'support','*.rb')].each { |file| require file }
+
+
+
+def rm_specout_outfile(outfile = "#{DEFAULT_MODEL}.png")
+  fullpath = File.join(OUT_DIR, outfile)
+  # FileUtils.rm fullpath if File.exist? fullpath
+  # puts "     (cli_spec: removed #{fullpath})"
+end
+
+

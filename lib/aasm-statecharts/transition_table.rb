@@ -21,7 +21,7 @@ module AASM_StateChart
     end
 
 
-    def add_transition(transition, conditionals: )
+    def add_transition(transition, conditionals: nil )
       t = {}
       t[:old_state] = transition.from
       t[:new_state] = transition.to

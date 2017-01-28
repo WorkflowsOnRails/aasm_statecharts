@@ -1,5 +1,20 @@
 /.idea
 /tmp
 
+!/spec/spec-out/pivotal_tracker_feature.png
+!/spec/spec-out/git_hub.png
+
+# rails stuff for development and testing:
+!/app
+!/assets
+!/bin/rails
+!/config
+
+/log
+
+
 Gemfile.lock
 coverage
+/vendor/ruby/
+
+!/aasm_statecharts-1.1.4.gem
