@@ -120,7 +120,7 @@ module AASM_StateChart
 
       if no_options(opts) && @options[:models].empty?
 
-        #raise AASM_StateChart::AASM_NoModels, "\n ERROR: (cli-no_options) Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n  args: #{args}\n options: #{opts.inspect}"
+        raise AASM_NoModels, AASM_NoModels.error_message("(cli-no_options) Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n  args: #{args}\n options: #{opts.inspect}")
 
         # show help
 
@@ -130,7 +130,7 @@ module AASM_StateChart
 
           if !opts[:all] && !version_or_graph_configs_opt?(args, opts)
 
-            raise AASM_StateChart::AASM_NoModels, "\n ERROR: (cli) Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n  args: #{args}\n options: #{opts.inspect}"
+            raise  AASM_StateChart::AASM_NoModels, AASM_NoModels.error_message("(cli) Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n  args: #{args}\n options: #{opts.inspect}")
 
           else # opts[:all] || version_or_graph_configs_opt?(args, opts)
 
@@ -139,7 +139,7 @@ module AASM_StateChart
 
             else
               unless opts.fetch(:version, false) || opts[:all]
-                raise AASM_StateChart::AASM_NoModels, "\n ERROR: (cli) Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n  args: #{args}\n options: #{opts.inspect}"
+                raise AASM_StateChart::AASM_NoModels, AASM_NoModels.error_message("(cli) Missing model or '--all' option:  You must either specify a model to diagram or use the --all option.\n\n  args: #{args}\n options: #{opts.inspect}")
               end
             end
 
@@ -148,7 +148,7 @@ module AASM_StateChart
         else
 
           if opts[:all]
-            raise AASM_StateChart::CLI_Inputs_ERROR "\n ERROR: You can't use the '--all' options and specify a model. (need more: why)"
+            raise AASM_StateChart::CLI_Inputs_ERROR, CLI_Inputs_ERROR.error_message("You can't use the '--all' options and specify a model. (need more: why)")
           end
 
           error_unless_valid_dump_configs(opts)
@@ -158,7 +158,7 @@ module AASM_StateChart
       end
 
       if opts.has_key?(:config_file) && !File.exist?(opts[:config_file])
-        raise AASM_StateChart::NoConfigFile_Error, "\n Error: (cli) The configuration file #{opts[:config_file]} cannot be found.\n\n"
+        raise AASM_StateChart::NoConfigFile_Error, NoConfigFile_Error.error_message("(cli) The configuration file #{opts[:config_file]} cannot be found.")
       end
 
       true
@@ -168,7 +168,7 @@ module AASM_StateChart
 
     def error_unless_valid_dump_configs(opts)
       if opts.fetch(:dump_configs, false) && !valid_dump_configs?(opts)
-        raise AASM_StateChart::CLI_Inputs_ERROR "\n ERROR: (cli) Invalid '--graph-configs' options. Must be one of..."
+        raise AASM_StateChart::CLI_Inputs_ERROR, CLI_Inputs_ERROR.error_message("(cli) Invalid '--graph-configs' options. Must be one of...")
       end
 
       true
@@ -213,7 +213,7 @@ module AASM_StateChart
         end
 
         opts.on('-c', '--config FILE', 'Use the config file named FILE') do |config_file|
-          @options[:config_file] = config_file
+          @options[:config_file] = File.expand_path config_file
         end
 
         opts.on('-t', '--table', 'Create a state transition table') do
@@ -227,7 +227,7 @@ module AASM_StateChart
           unless AASM_StateChart::Chart_Renderer::FORMATS.include?(format_d)
             @out << "ERROR: #{format} is not a recognized file format."
             @out << "\nThe file format must be one of the following: #{@formats}."
-            raise ArgumentError, @out
+            raise BadFormat_Error, BadFormat_Error.message("#{@out}")
           end
 
           @options[:format] = format_d
@@ -245,7 +245,7 @@ module AASM_StateChart
             if option_subinfo_ok?(:dump_configs, config_option.to_sym)
               @options[:dump_configs] = config_option.to_sym
             else
-              raise AASM_StateChart::CLI_Inputs_ERROR, "\n ERROR: (cli parse) Invalid '--graph-configs' options. Must be one of..."
+              raise AASM_StateChart::CLI_Inputs_ERROR, CLI_Inputs_ERROR.error_message("(cli parse) Invalid '--graph-configs' options. Must be one of...")
             end
 
           end
