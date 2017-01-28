@@ -5,7 +5,6 @@ module AASM_StateChart
 
   class AASM_StateChart_Error < StandardError
 
-    # standardize how the message is displayed (indentation, etc)
     def self.error_message(message = '')
       "\n\n  >>>  ERROR: #{message}  [#{self.name}] \n\n"
     end
