@@ -16,7 +16,6 @@ describe AASM_StateChart::AASM_StateCharts do
 
   include GraphvizSpecHelper
 
-
   describe 'pivotalTracker and github model classes' do
 
 
@@ -27,11 +26,14 @@ describe AASM_StateChart::AASM_StateCharts do
                 .update({directory: File.join(INCLUDE_PATH, 'shf')})
 
 
+# aasm_statecharts -i ./spec/fixtures/shf -d ./spec/spec-out/shf -c ./spec/fixtures/shf/aasm_diagram_blue_green_config.yml pivotal_tracker_feature
+
     it_will 'not raise an error', 'pivotal_tracker_feature',
             good_options.update({models: ['pivotal_tracker_feature']})
                 .update({path: File.join(INCLUDE_PATH, 'shf')})
                 .update({config_file: File.join(INCLUDE_PATH, 'shf', 'aasm_diagram_blue_green_config.yml')})
                 .update({directory: File.join(INCLUDE_PATH, 'shf')})
+                .update({no_rails: true})
 
 
   end
