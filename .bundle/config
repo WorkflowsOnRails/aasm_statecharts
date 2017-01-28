@@ -1,0 +1,11 @@
+---
+BUNDLE_PATH: "vendor"
+BUNDLE_DISABLE_SHARED_GEMS: "true"
+
+# Gems are installed in /vendor/ruby so that they don't conflict with
+# the version(s) installed for other projects
+# e.g.:
+#
+# bundle install --path vendor
+# bundle package
+# echo 'vendor/ruby' >> .gitignore

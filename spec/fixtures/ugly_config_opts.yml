@@ -1,0 +1,22 @@
+graph:
+  graph_style:
+    bgcolor: white
+  node_style:
+    fontname: Courier New
+    fontsize: 10
+    fontcolor: red
+    color: blue
+  edge_style:
+    fontname: Courier New
+    fontsize: 8
+    fontcolor: blue
+    color: green
+  start_node_style:
+    fontsize: 7
+    fontname: Ariel
+    fillcolor: green
+    style: filled
+  end_node_style:
+    fontsize: 7
+    fontname: Ariel
+    fillcolor: red
