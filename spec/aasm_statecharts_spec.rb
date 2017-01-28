@@ -152,6 +152,21 @@ describe AASM_StateChart::AASM_StateCharts do
       FileUtils.rm_r(test_dir)
     end
 
+
+    it 'handles a path that exists' do
+      pending
+    end
+
+
+    it "handles a path that doesn't exist at all" do
+      pending
+    end
+
+
+    it "handles a path that only first 2 dirs exist" do
+      pending
+    end
+
   end
 
 
@@ -248,7 +263,7 @@ describe AASM_StateChart::AASM_StateCharts do
   describe 'checks model classes' do
 
 
-    it_will 'raise error', 'model cannot be loaded',
+    it_will 'raise error', "model cannot be loaded (blorfy doesn't exist)",
             AASM_StateChart::ModelNotLoaded_Error,
             good_options.update({models: ['blorfy']})
 
@@ -285,9 +300,10 @@ describe AASM_StateChart::AASM_StateCharts do
     describe 'no rails = true' do
 
       it_will 'not raise an error', "model isn't ActiveRecord::Base subclass so Rails isn't needed",
-              good_options.update({models: ['not_rails_subclass_two_simple_states']}).update({no_rails: true})
+              good_options.update({models: ['no_rails_two_simple_states']}).update({no_rails: true})
 
-      # FIXME need to 'unload' Rails
+
+
       it_will 'raise error', "model is ActiveRecord::Base subclass so Rails is needed",
               AASM_StateChart::NoRailsConfig_Error,
               good_options.update({models: ['single_state']}).update({no_rails: true})
@@ -296,13 +312,20 @@ describe AASM_StateChart::AASM_StateCharts do
 
 
     it 'no error if it is not run under Rails config directory' do
+
       options = good_options
-      # FIXME how to run this under a different dir so it can fail?
+
+      orig_dir = FileUtils.getwd
+      FileUtils.cd (File.expand_path(File.join(__dir__, 'fixtures')))
+
       expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error AASM_StateChart::ModelNotLoaded_Error
+
+      FileUtils.cd orig_dir
+
     end
 
 
-    it 'loads a rails class Purchase' do
+    it 'loads a rails class: Purchase' do
 
       options = {format: 'png', models: ['purchase'], directory: OUT_DIR}
       options[:config_file] = UGLY_CONFIG_FN
