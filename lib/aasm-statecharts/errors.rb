@@ -5,8 +5,21 @@ module AASM_StateChart
 
   class AASM_StateChart_Error < StandardError
 
+    PREFIX = '  >>>  ERROR: '
+    INDENT_SIZE = PREFIX.size
+    INDENT_SPACES = ' ' * INDENT_SIZE
+
     def self.error_message(message = '')
-      "\n\n  >>>  ERROR: #{message}  [#{self.name}] \n\n"
+      "\n\n#{PREFIX}#{message}  [#{self.name}] \n\n"
+    end
+
+    def self.indent
+      INDENT_SPACES
+    end
+
+    def self.show_cause(c)
+      "#{indent}#{c.class.name}  #{c.message} \n#{indent}#{c.backtrace_locations.join("\n#{indent}")}]\n\n#{indent}cause: #{c.cause}.\n\n"
+
     end
 
   end
