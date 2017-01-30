@@ -1,4 +1,5 @@
 require 'graphviz'
+require 'psych'
 
 # TODO these shouldn't be necessary,... right?
 require_relative 'transition_table'
