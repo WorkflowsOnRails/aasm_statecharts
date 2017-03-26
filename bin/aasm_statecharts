@@ -1,10 +1,7 @@
 #!/Users/ashleyengelund/.rbenv/versions/2.3.1/bin/ruby -w
 
-
 orig_verbose = $VERBOSE
 $VERBOSE = nil
-
-require 'pp'
 
 require 'optionparser'
 require 'graphviz/constants'
@@ -46,8 +43,6 @@ module AASM_StateChart
       argv << '-h' if argv.empty?
 
       process argv
-
-      puts @out
 
     end
 
@@ -178,7 +173,18 @@ module AASM_StateChart
     def process(args)
 
       OptionParser.new do |opts|
-        opts.banner = "\n\nUsage: aasm_statechart [options] <model> [models ...]\n   Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel\n\n   Options:"
+        opts.banner = "\n\nUsage: aasm_statechart [options] <model> [models ...]\n Where <model> is the lower case, underscored model name.  Ex:  'my_model' for the class MyModel"
+        opts.banner << "\n\n  This assumes that (1) you are using AASM code in your ruby source for the model, and"
+        opts.banner << "\n  (2) you have graphViz installed and in your PATH.  graphViz is what takes the .dot file and actually"
+        opts.banner << "\n  generates the final graphic file."
+        opts.banner << "\n\n  If you are going to graph a model that is a subclass of ActiveRecord (or any other Rails class),"
+        opts.banner << "\n  you must run this from your <RailsRoot> directory.  Be sure to use the --directory option to specify the location of the models."
+        opts.banner << "\n\n  Example: To create a graph for the model MembershipApplication that is a subclass of ActiveRecord (in Rails):\n    aasm_statecharts application"
+        opts.banner << "\n\n  Example: For the Application model above,create a .jpg file and put it in the ./output/graphs directory and use the configuration file my_ugly_colors.yml:\n    aasm_statecharts --directory ./output/graphs --config my_ugly_colors.yml --file jpg application "
+        opts.banner << "\n\n  Example: To create a graph for the model Purchase that exists in the file ./models/purchase.rb and Purchase does NOT inherit from anything in Rails:\n    aasm_statecharts --no-rails --include ./models purchase   "
+
+
+        opts.banner << "\n\nOptions:"
 
         opts.on_tail('-v', '--version', 'version of this gem') do
           @options[:version] = true
@@ -198,7 +204,7 @@ module AASM_StateChart
           @options[:subclass_root_model] = subclass_root_model
         end
 
-        opts.on('-n', '--no-rails', "Do not load Rails. (The model(s) are not subclasses of anything Rails.)") do
+        opts.on('-n', '--no-rails', "Do not load Rails. (The model(s) are not subclasses of ActiveRecord or anything in Rails.)") do
           @options[:no_rails] = true
         end
 
@@ -268,9 +274,7 @@ module AASM_StateChart
 
       check_options @options, args
 
-
-      puts @out = AASM_StateChart::AASM_StateCharts.new(@options).run if !@options[:version]
-
+      @out = AASM_StateChart::AASM_StateCharts.new(@options).run unless @options[:version]
 
     end
 
@@ -278,7 +282,6 @@ module AASM_StateChart
 
 end
 
-# /Users/ashleyengelund/github/AV--shf-project/app/models/membership_application.rb
 
 AASM_StateChart::AASM_Statecharts_CLI.new($*)
 
