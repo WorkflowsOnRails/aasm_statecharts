@@ -1,0 +1,34 @@
+---
+# Configuration file for aasm_statecharts gem
+#   Ashley Engelund
+#   2017-03-25
+#
+#  Sets colors and formatting for the graphic that is generated
+#
+#  State names are in BLUE. Start node is green, end node is blue
+
+graph:
+  graph_style:
+    bgcolor: white
+
+  node_style:
+    fontname: Verdana
+    fontsize: 11
+    fontcolor: blue
+    penwidth: 2
+
+  edge_style:
+    fontname: Arial
+    fontsize: 10
+
+
+  start_node_style:
+    fontsize: 7
+    fontname: Ariel
+    fillcolor: green
+    style: filled
+
+  end_node_style:
+    fontsize: 7
+    fontname: Ariel
+    fillcolor: blue
