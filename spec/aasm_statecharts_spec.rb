@@ -134,7 +134,7 @@ describe AASM_StateChart::AASM_StateCharts do
 
     after(:each) { rm_specout_outfile }
 
-    it_will 'use doc directory', 'no directory option provided', good_options.reject! { |k, v| k == :directory }
+    it_will 'use doc directory', 'no directory option provided', (good_options.reject!{ |k, v| k == :directory })
     it_will 'use doc directory', 'directory = empty string', good_options.update({directory: ''})
 
 
@@ -303,7 +303,6 @@ describe AASM_StateChart::AASM_StateCharts do
               good_options.update({models: ['no_rails_two_simple_states']}).update({no_rails: true})
 
 
-
       it_will 'raise error', "model is ActiveRecord::Base subclass so Rails is needed",
               AASM_StateChart::NoRailsConfig_Error,
               good_options.update({models: ['single_state']}).update({no_rails: true})
@@ -311,14 +310,17 @@ describe AASM_StateChart::AASM_StateCharts do
     end
 
 
-    it 'no error if it is not run under Rails config directory' do
+    it 'error if it is not run under Rails config directory' do
+      # move to a directory that is not the Rails config directory
+      orig_dir = FileUtils.getwd
+      FileUtils.cd(File.expand_path(File.join(__dir__, 'fixtures')))
 
       options = good_options
 
-      orig_dir = FileUtils.getwd
-      FileUtils.cd (File.expand_path(File.join(__dir__, 'fixtures')))
+      # remove output directory from the options so there's not a problem trying to create the directory
+      options.reject!{ |k, v | k == :directory}
 
-      expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error AASM_StateChart::ModelNotLoaded_Error
+      expect { AASM_StateChart::AASM_StateCharts.new(options).run }.to raise_error AASM_StateChart::NoRailsConfig_Error
 
       FileUtils.cd orig_dir
 

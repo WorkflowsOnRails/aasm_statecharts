@@ -6,6 +6,7 @@ graph:
     fontsize: 10
     fontcolor: red
     color: blue
+
   edge_style:
     fontname: Courier New
     fontsize: 8

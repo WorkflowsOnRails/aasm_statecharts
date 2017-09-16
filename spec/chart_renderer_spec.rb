@@ -8,7 +8,6 @@
 require 'spec_helper'
 
 
-
 RSpec.shared_examples 'saves to a file' do |aasm_model, output_format|
   renderer = AASM_StateChart::Chart_Renderer.new(aasm_model)
 
@@ -171,7 +170,7 @@ describe AASM_StateChart::Chart_Renderer do
         end
 
         it 'b to c' do
-         # find_edge(edges, 'c', renderer.end_node.id)
+          # find_edge(edges, 'c', renderer.end_node.id)
           b_c = find_edge(edges, 'b', 'c')
           expect_label_matches(b_c, /x \[:xbc1_guard, :xbc2_guard\]/)
         end
@@ -190,12 +189,28 @@ describe AASM_StateChart::Chart_Renderer do
 
       it_should_behave_like 'it has this many nodes', renderer, 8
 
-      it 'node a label' do
-        expect_label_matches(nodes['a'], /exit: a_exit/)
-      end
+      describe 'labels are tables' do
 
-      it 'node b label' do
-        expect_label_matches(nodes['b'], /\{B|entry: b1_enter b2_enter\\lexit: b1_exit b2_exit}/)
+        it 'node a enter label' do
+          # orig: expect_label_matches(nodes['a'], /exit: a_exit/)
+          expect_label_matches(nodes['a'], /<tr><td SIDES="B" ALIGN="LEFT" COLOR="gray40"><FONT FACE="Arial:italic" POINT-SIZE="10" COLOR="gray20">enter state action: a enter<\/FONT><\/td><\/tr>/)
+        end
+
+        it 'node a name' do
+          # orig: expect_label_matches(nodes['a'], /exit: a_exit/)
+          expect_label_matches(nodes['a'], /<tr><td BORDER="0" ALIGN="CENTER">A<\/td><\/tr>/)
+        end
+
+        it 'node a exit label' do
+          # orig: expect_label_matches(nodes['a'], /exit: a_exit/)
+          expect_label_matches(nodes['a'], /<tr><td SIDES="T" ALIGN="RIGHT" COLOR="gray40"><FONT FACE="Arial:italic" POINT-SIZE="10" COLOR="gray20">exit state action: a exit<\/FONT><\/td><\/tr>/)
+        end
+
+        it 'node b entire label' do
+          expect_label_matches(nodes['b'], /<<table BORDER="0" CELLBORDER="1"><tr><td SIDES="B" ALIGN="LEFT" COLOR="gray40"><FONT FACE="Arial:italic" POINT-SIZE="10" COLOR="gray20">enter state action: b1 enter, b2 enter<\/FONT><\/td><\/tr>(\s*)<tr><td BORDER="0" ALIGN="CENTER">B<\/td><\/tr>(\s*)<tr><td SIDES="T" ALIGN="RIGHT" COLOR="gray40"><FONT FACE="Arial:italic" POINT-SIZE="10" COLOR="gray20">exit state action: b1 exit, b2 exit<\/FONT><\/td><\/tr><\/table>>/)
+        end
+
+
       end
 
     end
