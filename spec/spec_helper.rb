@@ -1,30 +1,30 @@
-require 'tmpdir'
-
-Bundler.require(:default, :development)
+require 'simplecov'
 
 SimpleCov.start do
   add_filter "/spec/"
 end
 
-require_relative '../lib/aasm_statechart'
+require 'rspec'
+
+require 'aasm'
+
+require 'graphviz'
+
+#require 'active_record'
+
+require File.expand_path(File.join(__dir__, '..', 'lib','aasm_statecharts.rb'))
 
 
-module SpecHelper
-  def name_of(s)
-    s.gsub(/\A"|"\Z/, '')
-  end
+#Dir[File.join(__dir__, 'fixtures','*.rb')].each { |file| require file }
 
-  def find_edge(edges, from, to)
-    edge = edges.find do |each|
-      (name_of(each.node_one) == name_of(from) &&
-       name_of(each.node_two) == name_of(to))
-    end
+Dir[File.join(__dir__, 'support','*.rb')].each { |file| require file }
 
-    expect(edge).to be_present
-    edge
-  end
 
-  def expect_label_matches(obj, regex)
-    expect(obj['label'].source).to match regex
-  end
+
+def rm_specout_outfile(outfile = "#{DEFAULT_MODEL}.png")
+  fullpath = File.join(OUT_DIR, outfile)
+  # FileUtils.rm fullpath if File.exist? fullpath
+  # puts "     (cli_spec: removed #{fullpath})"
 end
+
+
