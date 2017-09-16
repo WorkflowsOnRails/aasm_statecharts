@@ -18,7 +18,7 @@ module AASM_StateChart
     end
 
     def self.show_cause(c)
-      "#{indent}#{c.class.name}  #{c.message} \n#{indent}#{c.backtrace_locations.join("\n#{indent}")}]\n\n#{indent}cause: #{c.cause}.\n\n"
+      "#{indent}#{c.class.name}  #{c.message} \n#{indent}#{c.backtrace_locations.nil? ? '' : c.backtrace_locations.join("\n#{indent}")}]\n\n#{indent}cause: #{c.cause}.\n\n"
 
     end
 
