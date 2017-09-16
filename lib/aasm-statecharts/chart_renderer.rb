@@ -62,7 +62,7 @@ module AASM_StateChart
       @graph.type = 'digraph' # TODO config
 
 
-      @transition_table = TransitionTable.new if transition_table
+      @transition_table = TransitionTable.new(@default_config.fetch(:transition_table_table_style, {})) if transition_table
 
 
       # ruby-graphviz is missing an API to set global styles (in bulk), so set them here
@@ -81,7 +81,7 @@ module AASM_StateChart
           raise NoStates_Error, "ERROR: No states found for #{klass.name}!  No diagram generated"
         else
 
-          add_graph_title_node( humanize_class_name( klass.name ) )
+          add_graph_title_node(humanize_class_name(klass.name))
 
           klass.aasm.states.each { |state| render_state(state) }
           klass.aasm.events.each { |event| render_event(event) unless event.blank? }
@@ -93,7 +93,7 @@ module AASM_StateChart
               end
             end
 
-            transition_node_opts = @default_config[:transition_table_node_style].merge({label: @transition_table.render})
+            transition_node_opts = @default_config[:transition_table_node_style].merge({ label: @transition_table.render })
 
             @graph.add_nodes('State Transition Table', transition_node_opts) # TODO i18n table title or at least config
 
@@ -109,8 +109,8 @@ module AASM_StateChart
 
     def save(filename, format: 'png', graph_options: (@default_config[:graph_style]))
       opts = {}
-      opts.merge!(graph_options).merge({format => filename}) # FIXME why can't I merge in graph_options? can't seem to use opts
-      @graph.output({format => filename})
+      opts.merge!(graph_options).merge({ format => filename }) # FIXME why can't I merge in graph_options? can't seem to use opts
+      @graph.output({ format => filename })
     end
 
 
@@ -157,10 +157,10 @@ module AASM_StateChart
     end
 
 
-    def get_callbacks(options, keys)
+    def get_callbacks(options, keys, join_str = ' ')
       get_options(options, keys)
           .map { |callback| "#{callback}" }
-          .join(' ')
+          .join(join_str)
     end
 
 
@@ -171,14 +171,11 @@ module AASM_StateChart
 
     def render_state(state)
 
-      enter_callbacks = get_callbacks(state.options, ENTER_CALLBACKS)
-      exit_callbacks = get_callbacks(state.options, EXIT_CALLBACKS)
+      enter_callbacks = get_callbacks(state.options, ENTER_CALLBACKS, ', ')
+      exit_callbacks = get_callbacks(state.options, EXIT_CALLBACKS, ', ')
 
-      callbacks_list = []
-      callbacks_list << "entry: #{enter_callbacks}" if enter_callbacks.present? # TODO config entry (should use i18n)
-      callbacks_list << "exit: #{exit_callbacks}" if exit_callbacks.present?    # TODO config exit (should use i18n)
 
-      label = "{#{state.display_name}|#{callbacks_list.join('\l')}}"
+      label = state_label(enter_callbacks, state.display_name, exit_callbacks)
 
       node = add_node state.name.to_s, :node_style, label
 
@@ -189,6 +186,92 @@ module AASM_StateChart
         @graph.add_edges(node, end_node)
 
       end
+    end
+
+
+    # return the label string for the state node given the name, the string for 'enter' and the string for 'exit'
+    def state_label(enter_conditions, name, exit_conditions)
+      # orig: "{#{state.display_name}|#{callbacks_list.join('\l')}}"
+
+
+      enter_row = enter_conditions.present? ? enter_exit_td(enter_conditions.humanize(capitalize: false),
+                                                            'enter state action',
+                                                            @default_config[:node_enter_label_style]) : "" # TODO I18n 'enter'
+
+      exit_row = exit_conditions.present? ? enter_exit_td(exit_conditions.humanize(capitalize: false),
+                                                          'exit state action',
+                                                          @default_config[:node_exit_label_style]) : "" # TODO I18n 'exit'
+
+      state_name_row = single_td_row(name, 'BORDER="0" ALIGN="CENTER"') # TODO use config from file for ALIGN
+
+
+      # Note that dot requires this all to be surrounded by an extra pair of "<>"
+      '<' + make_html_entity("table", "#{enter_row} #{state_name_row} #{exit_row}", 'BORDER="0" CELLBORDER="1"') + '>'
+
+    end
+
+
+    def enter_exit_td(inner_body, enter_exit = '', style_options = {})
+
+      cell_color = color_attr style_options.fetch(:color, 'gray')
+      alignment = align_attr(style_options.fetch(:align, 'CENTER'))
+      sides = side_attr(style_options.fetch(:sides, ''))
+
+      font_attributes = font_attr(name: style_options.fetch(:fontname, 'serif'),
+                                  size: style_options.fetch(:fontsize, 11),
+                                  color: style_options.fetch(:fontcolor, 'gray')
+      )
+
+      single_td_row(
+          make_html_entity('FONT', "#{enter_exit}: " + inner_body, font_attributes),
+          sides + ' ' + alignment + ' ' + cell_color)
+    end
+
+
+    def font_attr(name: '', size: '', color: '')
+      "#{face_attr(name)} #{point_size_attr(size)} #{color_attr(color)}"
+    end
+
+
+    def point_size_attr(pt_size)
+      html_like_attr "POINT-SIZE", pt_size
+    end
+
+
+    def face_attr(face)
+      html_like_attr "FACE", face
+    end
+
+
+    def align_attr(alignment)
+      html_like_attr "ALIGN", alignment
+    end
+
+
+    def side_attr(sides)
+      html_like_attr "SIDES", sides
+    end
+
+
+    def color_attr(color_name)
+      html_like_attr "COLOR", color_name
+    end
+
+
+    # return an empty string if the value is empty
+    def html_like_attr(tag, value)
+      value.to_s.empty? ? "" : "#{tag}=\"#{value}\""
+    end
+
+
+    def single_td_row(inner_body, td_attributes='')
+      make_html_entity("tr", make_html_entity("td", inner_body, td_attributes))
+    end
+
+
+    def make_html_entity(tag, inner_body, tag_attributes='')
+      attribs = ' ' + tag_attributes unless tag_attributes.empty?
+      "<#{tag}#{attribs}>#{inner_body}</#{tag}>"
     end
 
 
@@ -223,7 +306,7 @@ module AASM_StateChart
     # plaintext node for the graph label (like a title box)
     def add_graph_title_node(graph_label = '')
 
-      add_node 'title', :graph_label_node_style, "#{graph_label}\\l"
+      add_node 'title', :title_node_style, "#{graph_label}\\l"
 
     end
 
@@ -231,23 +314,22 @@ module AASM_StateChart
     # plaintext node for the graph footer info
     def add_graph_footer_node
 
-      text =  "Date: #{Time.now.strftime '%b %d %Y - %H:%M'}\\l" +
+      text = "Date: #{Time.now.strftime '%b %d %Y - %H:%M'}\\l" +
           "Generated by #{AASM_StateChart::APP_HUMAN_NAME} #{AASM_StateChart::VERSION}\\l" + "http://github.com/weedySeaDragon"
 
-      add_node 'footer', :graph_footer_node_style, text
+      add_node 'footer', :footer_node_style, text
 
     end
 
 
-
     def add_node(name, default_config_key, label_text)
-      @graph.add_nodes(name, @default_config[default_config_key].merge({label: label_text}))
+      @graph.add_nodes(name, @default_config[default_config_key].merge({ label: label_text }))
 
     end
 
 
     def humanize_class_name(klass_name)
-      klass_name.gsub(/([A-Z])/,' \1').strip
+      klass_name.gsub(/([A-Z])/, ' \1').strip
     end
 
 
@@ -279,9 +361,28 @@ module AASM_StateChart
           node_style: {
               shape: :Mrecord,
               fontname: 'Arial',
-              fontsize: 10,
+              fontsize: 11,
               penwidth: 0.7,
           },
+
+          node_enter_label_style: {
+              fontname: 'Arial:italic',
+              fontsize: 10,
+              fontcolor: 'gray20',
+              color: 'gray40',
+              align: 'LEFT',
+              sides: 'B',
+          },
+
+          node_exit_label_style: {
+              fontname: 'Arial:italic',
+              fontsize: 10,
+              fontcolor: 'gray20',
+              color: 'gray40',
+              align: 'RIGHT',
+              sides: 'T',
+          },
+
 
           edge_style: {
               dir: :forward,
@@ -317,13 +418,20 @@ module AASM_StateChart
               shape: :plaintext
           },
 
-          graph_label_node_style: {
+          transition_table_table_style: {
+              align: 'LEFT',
+              cell_padding: 4,
+              headercolor: 'black',
+              fontcolor: 'blue',
+          },
+
+          title_node_style: {
               shape: :plaintext,
               fontcolor: 'black',
               fontsize: 10
           },
 
-          graph_footer_node_style: {
+          footer_node_style: {
               shape: :plaintext,
               fontsize: 6,
               fontcolor: 'black'
