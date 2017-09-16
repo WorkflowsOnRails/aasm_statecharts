@@ -3,7 +3,7 @@ require File.join(__dir__, 'lib','aasm-statecharts', 'version')
 Gem::Specification.new do |s|
   s.name        = 'aasm_statecharts'
   s.version     = AASM_StateChart::VERSION
-  s.date        = '2017-03-20'
+  s.date        = '2017-09-12'
   s.summary     = "AASM statecharts"
   s.description = "Uses ruby-graphviz to create a graph from AASM state machine code. This gem creates a .dot file, which is then used by ruby-graphviz to call graphviz dot to create a graphic (e.g. .png) file.  This assumes you have graphviz installed and on your PATH.  Based on Brendan MacDonell's AASM statecharts gem."
   s.authors     = ["Ashley Engelund"]

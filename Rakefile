@@ -1,3 +1,16 @@
+require_relative "lib/aasm-statecharts/version"
+
+
+task :build do
+  system "gem build aasm_statecharts.gemspec"
+end
+
+task :release => :build do
+  system "gem push aasm_statecharts-#{AASM_StateChart::VERSION}"
+end
+
+
+
 require 'graphviz'
 require 'pp'
 
@@ -10,7 +23,7 @@ require 'pp'
 desc "pp Hash of GraphViz options for Graphs"
 task :pp_graphviz_graph_options do
   # gets constants for the root graph, subgraphs, and cluster subgraphs (G|S|X):
-  pp graphviz_options_for(/G|S|X/)
+  pp graphviz_options_for(/[GSX]/)
 end
 
 
