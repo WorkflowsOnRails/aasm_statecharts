@@ -16,12 +16,13 @@ module AASM_StateChart
 
   class TransitionTable
 
-    def initialize
+    def initialize(config_options={})
       @rows = []
+      @config = config_options
     end
 
 
-    def add_transition(transition, conditionals: nil )
+    def add_transition(transition, conditionals: nil)
       t = {}
       t[:old_state] = transition.from
       t[:new_state] = transition.to
@@ -31,43 +32,6 @@ module AASM_StateChart
       @rows << t
 
     end
-
-
-=begin
-
-Example of a HTML table in a .dot file:
----------------------------------------
-
-digraph structs {
-    node [shape=plaintext]
-    struct1 [label=<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-  <TR><TD>left</TD><TD PORT="f1">mid dle</TD><TD PORT="f2">right</TD></TR>
-</TABLE>>];
-    struct2 [label=<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-  <TR><TD PORT="f0">one</TD><TD>two</TD></TR>
-</TABLE>>];
-    struct3 [label=<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-  <TR>
-    <TD ROWSPAN="3">hello<BR/>world</TD>
-    <TD COLSPAN="3">b</TD>
-    <TD ROWSPAN="3">g</TD>
-    <TD ROWSPAN="3">h</TD>
-  </TR>
-  <TR>
-    <TD>c</TD><TD PORT="here">d</TD><TD>e</TD>
-  </TR>
-  <TR>
-    <TD COLSPAN="3">f</TD>
-  </TR>
-</TABLE>>];
-    struct1:f1 -> struct2:f0;
-    struct1:f2 -> struct3:here;
-}
-
-=end
 
 
     def render
@@ -91,24 +55,23 @@ digraph structs {
 
 
     def transition_cols_order
-      [:triggering_event, :old_state, :new_state,  :iff_conditions_met]
+      [:old_state, :triggering_event, :iff_conditions_met,  :new_state, ]
     end
 
 
     def transition_headers
       # TODO use I18n lookup like aasm gem does in localizer.rb
-      # TODO could read these table headers from a configuration file
 
-      {old_state: 'Old State',
-       new_state: 'New State',
-       triggering_event: 'Triggering Event',
-       iff_conditions_met: 'Iff All These Are True'}
+      { old_state: 'Old State',
+        new_state: 'New State',
+        triggering_event: 'Triggering Event',
+        iff_conditions_met: 'Iff All These Are True' }
 
     end
 
 
     def table_start
-      '<TABLE CELLPADDING="2" CELLSPACING="0" TITLE="State Transition Table">'
+      "<TABLE CELLPADDING=\"#{@config.fetch(:cell_padding, 4)}\" CELLSPACING=\"0\" TITLE=\"State Transition Table\">"  # TODO get from config file; I18n
     end
 
 
@@ -140,11 +103,13 @@ digraph structs {
     end
 
 
-    def render_conditionals(conditionals)
+    # TODO DRY with rendering methods in chart_renderer
 
-      conditionals.join(' ')
 
+    def render_conditionals(conditionals, join_str=' ')
+      conditionals.join(join_str)
     end
+
 
     def header_row_start
       '<TR>'
@@ -157,12 +122,12 @@ digraph structs {
 
 
     def header_cell_start
-      '<TD>'
+      "<TD ALIGN=\"#{@config.fetch(:align, 'LEFT')}\"><FONT COLOR=\"#{@config.fetch(:headercolor, 'black')}\">"
     end
 
 
     def header_cell_end
-      '</TD>'
+      '</FONT></TD>'
     end
 
 
@@ -177,12 +142,13 @@ digraph structs {
 
 
     def cell_start
-      '<TD>'
+    #  "<TD ALIGN=\"#{@config.fetch(:align, 'LEFT')}\"><FONT COLOR=\"#{@config.fetch(:fontcolor, 'black')}\">"
+      "<TD ALIGN=\"#{@config.fetch(:align, 'LEFT')}\">"
     end
 
 
     def cell_end
-      '</TD>'
+      '</TD>' #'</FONT></TD>'
     end
   end # TransitionTable
 
