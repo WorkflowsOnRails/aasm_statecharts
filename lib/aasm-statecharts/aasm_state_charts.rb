@@ -1,6 +1,8 @@
 require 'graphviz'
 require 'psych'
 
+require 'aasm'
+
 # TODO these shouldn't be necessary,... right?
 require_relative 'transition_table'
 require_relative 'chart_renderer'
