@@ -12,6 +12,6 @@ Gem::Specification.new do |s|
   s.license     = 'MIT'
 
   s.add_runtime_dependency 'rails', ['~> 4.0']
-  s.add_runtime_dependency 'aasm', ['~> 3.0']
+  s.add_runtime_dependency 'aasm', ['~> 5.1']
   s.add_runtime_dependency 'ruby-graphviz', ['~> 1.0']
 end
