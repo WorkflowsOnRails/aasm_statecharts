@@ -9,7 +9,7 @@
 #
 # For example, to render the state machine associated with a class named ModelClass,
 # you would do the following:
-#   
+#
 #   renderer = AasmStatechart::Renderer.new(ModelClass)
 #   renderer.save(filename, format: 'png')
 #
@@ -17,6 +17,7 @@
 
 require 'graphviz'
 
+require 'fileutils'
 
 module AasmStatechart
   class Renderer
@@ -87,7 +88,13 @@ module AasmStatechart
     end
 
     def save(filename, format: 'png')
+      create_sub_folders_if_not_exist(filename)
       @graph.output({format => filename})
+    end
+
+    def create_sub_folders_if_not_exist(filename)
+      directory = File.dirname(filename)
+      FileUtils.mkdir_p(directory)
     end
 
     def graph
