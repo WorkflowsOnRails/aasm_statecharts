@@ -19,6 +19,8 @@ require 'graphviz'
 
 require 'fileutils'
 
+require_relative 'lambda_reader'
+
 module AasmStatechart
   class Renderer
     FORMATS = GraphViz::Constants::FORMATS
@@ -158,7 +160,15 @@ module AasmStatechart
         chunks = [name]
 
         guard = transition.options.fetch(:guard, nil)
-        chunks << "[#{guard}]" if guard
+        if guard
+          if guard.is_a? Proc
+            proc_source = LambdaReader.source(guard)
+            chunks << "[#{proc_source}]" if proc_source.present?
+          else
+            chunks << "[#{guard}]"
+          end
+        end
+
         callbacks = get_callbacks(transition.options, TRANSITION_CALLBACKS)
         chunks << '/' << callbacks if callbacks.present?
 
