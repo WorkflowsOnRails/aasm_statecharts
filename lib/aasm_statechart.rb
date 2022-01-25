@@ -84,7 +84,10 @@ module AasmStatechart
       end
 
       klass.aasm.states.each { |state| render_state(state) }
-      klass.aasm.events.each { |name, event| render_event(name, event) }
+
+      klass.aasm.events.each do |event|
+        render_event(event.name, event)
+      end
     end
 
     def save(filename, format: 'png')
