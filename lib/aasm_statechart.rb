@@ -9,7 +9,7 @@
 #
 # For example, to render the state machine associated with a class named ModelClass,
 # you would do the following:
-#   
+#
 #   renderer = AasmStatechart::Renderer.new(ModelClass)
 #   renderer.save(filename, format: 'png')
 #
@@ -17,6 +17,9 @@
 
 require 'graphviz'
 
+require 'fileutils'
+
+require_relative 'lambda_reader'
 
 module AasmStatechart
   class Renderer
@@ -83,11 +86,20 @@ module AasmStatechart
       end
 
       klass.aasm.states.each { |state| render_state(state) }
-      klass.aasm.events.each { |name, event| render_event(name, event) }
+
+      klass.aasm.events.each do |event|
+        render_event(event.name, event)
+      end
     end
 
     def save(filename, format: 'png')
+      create_sub_folders_if_not_exist(filename)
       @graph.output({format => filename})
+    end
+
+    def create_sub_folders_if_not_exist(filename)
+      directory = File.dirname(filename)
+      FileUtils.mkdir_p(directory)
     end
 
     def graph
@@ -148,7 +160,15 @@ module AasmStatechart
         chunks = [name]
 
         guard = transition.options.fetch(:guard, nil)
-        chunks << "[#{guard}]" if guard
+        if guard
+          if guard.is_a? Proc
+            proc_source = LambdaReader.source(guard)
+            chunks << "[#{proc_source}]" if proc_source.present?
+          else
+            chunks << "[#{guard}]"
+          end
+        end
+
         callbacks = get_callbacks(transition.options, TRANSITION_CALLBACKS)
         chunks << '/' << callbacks if callbacks.present?
 

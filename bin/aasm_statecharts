@@ -82,7 +82,7 @@ end
 
 def collect_all_models
   Rails::Application.subclasses.first.eager_load!
-  ActiveRecord::Base.subclasses.select { |klass| klass.respond_to? :aasm }
+  all = ApplicationRecord.subclasses.select { |klass| klass.respond_to? :aasm }
 end
 
 
